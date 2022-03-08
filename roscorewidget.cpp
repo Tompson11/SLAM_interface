@@ -9,7 +9,6 @@ RoscoreWidget::RoscoreWidget(QWidget *parent) : QWidget(parent)
 
     text_rospath = new QtMaterialTextField(this);
     text_rospath->setLabel("ROS Installment Path");
-    text_rospath->setText("/opt/ros/noetic");
 
     button_dialog = new QtMaterialRaisedButton(this);
     button_dialog->setText("browse");
@@ -68,6 +67,8 @@ RoscoreWidget::RoscoreWidget(QWidget *parent) : QWidget(parent)
 
     connect(&timer_ros_detect, &QTimer::timeout, this, &RoscoreWidget::handleROSOpenError);
     connect(&timer_rosopen, &QTimer::timeout, this, &RoscoreWidget::detectRosOpen);
+
+    text_rospath->setText("/opt/ros/noetic");
 }
 
 RoscoreWidget::~RoscoreWidget() {
@@ -95,6 +96,7 @@ void RoscoreWidget::testMasterReachable(const QString &master_hostname, int time
 void RoscoreWidget::onRospathChanged() {
     is_rospath_changed = true;
     is_rospath_valid = false;
+    ros_bash_path = text_rospath->text() + "/setup.bash";
 }
 
 void RoscoreWidget::onToggled(bool tog) {
@@ -116,7 +118,7 @@ void RoscoreWidget::onToggled(bool tog) {
              toggle_start->setEnabled(false);
              progress_open->setVisible(true);
 
-             utils::killSystemProcess(nullptr, "roscore");
+             utils::killSystemProcess(nullptr, "roscore", QString::number(process_roscore->pid()));
              process_roscore->terminate();
              process_roscore->waitForFinished();
 
@@ -261,14 +263,14 @@ void RoscoreWidget::tryOpenRoscore() {
 bool RoscoreWidget::getSourceROSCmd(QString &cmd) {
 
     if(is_rospath_changed) {
-        is_rospath_valid = validateRosPath(true);
+        is_rospath_valid = validateRosPath(ros_bash_path, true);
     }
 
     if(!is_rospath_valid)
         return false;
 
     cmd.clear();
-    cmd += "source " + this->ros_path + "/setup.bash;";
+    cmd += "source " + ros_bash_path + ";";
     cmd += "export ROS_MASTER_URI=" + this->master_uri + ";";
     cmd += "export ROS_HOSTNAME=" + this->host_ip + ";";
 
@@ -305,11 +307,9 @@ void RoscoreWidget::showInfo(const QString &info) {
     snack->addInstantMessage(info);
 }
 
-bool RoscoreWidget::validateRosPath(bool pop_error) {
-    ros_path = text_rospath->text().trimmed();
-
-    if(ros_path.length()) {
-        if(utils::existDir(ros_path.toStdString()) && utils::existDir(ros_path.toStdString() + "/setup.bash")) {
+bool RoscoreWidget::validateRosPath(const QString &bash_path, bool pop_error) {
+    if(bash_path.length() > 0) {
+        if(utils::existDir(bash_path)) {
             return true;
         }
         else {
@@ -318,6 +318,9 @@ bool RoscoreWidget::validateRosPath(bool pop_error) {
 
             return false;
         }
+    }
+    else {
+        return false;
     }
 }
 
@@ -420,7 +423,7 @@ void RoscoreWidget::checkRoscoreOpenResult() {
     utils::getQProcessStandardOutput(process_roscore ,out, true);
 
     if(out.isEmpty()) {
-        utils::killSystemProcess(nullptr, "roscore");
+        utils::killSystemProcess(nullptr, "roscore", QString::number(process_roscore->pid()));
     }
 
     QString err;

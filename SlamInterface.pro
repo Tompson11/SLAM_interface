@@ -19,6 +19,8 @@ SOURCES += \
     components/lib/qtmaterialtheme.cpp \
     components/qtmaterialcircularprogress.cpp \
     components/qtmaterialcircularprogress_internal.cpp \
+    components/qtmaterialdialog.cpp \
+    components/qtmaterialdialog_internal.cpp \
     components/qtmaterialflatbutton.cpp \
     components/qtmaterialflatbutton_internal.cpp \
     components/qtmaterialraisedbutton.cpp \
@@ -28,10 +30,14 @@ SOURCES += \
     components/qtmaterialtextfield_internal.cpp \
     components/qtmaterialtoggle.cpp \
     components/qtmaterialtoggle_internal.cpp \
+    filedelegate.cpp \
+    launchconfigdialog.cpp \
+    launchtableview.cpp \
     main.cpp \
     mainwindow.cpp \
     roscorewidget.cpp \
-    sensorwidget.cpp
+    sensorwidget.cpp \
+    utils/sys.cpp
 
 HEADERS += \
     components/lib/qtmaterialcheckable.h \
@@ -49,6 +55,9 @@ HEADERS += \
     components/qtmaterialcircularprogress.h \
     components/qtmaterialcircularprogress_internal.h \
     components/qtmaterialcircularprogress_p.h \
+    components/qtmaterialdialog.h \
+    components/qtmaterialdialog_internal.h \
+    components/qtmaterialdialog_p.h \
     components/qtmaterialflatbutton.h \
     components/qtmaterialflatbutton_internal.h \
     components/qtmaterialflatbutton_p.h \
@@ -63,6 +72,9 @@ HEADERS += \
     components/qtmaterialtoggle.h \
     components/qtmaterialtoggle_internal.h \
     components/qtmaterialtoggle_p.h \
+    filedelegate.h \
+    launchconfigdialog.h \
+    launchtableview.h \
     mainwindow.h \
     roscorewidget.h \
     sensorwidget.h \

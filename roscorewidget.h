@@ -24,12 +24,12 @@ class RoscoreWidget : public QWidget
     Q_OBJECT
 public:
     explicit RoscoreWidget(QWidget *parent = nullptr);
+    bool getSourceROSCmd(QString &cmd);
     ~RoscoreWidget();
 
 private:
     void setMasterURI(const QString &uri);
-    bool validateRosPath(bool pop_error = false);
-    bool getSourceROSCmd(QString &cmd);
+    bool validateRosPath(const QString &path, bool pop_error = false);
     void detectRosOpen();
     void tryOpenRoscore();
     bool splitMasterURI(const QString &uri, QString &master_hostname, QString &master_port);
@@ -65,7 +65,7 @@ private:
     QTimer timer_ros_detect;
 
     int ros_distro;
-    QString ros_path;
+    QString ros_bash_path;
     QString host_ip;
     QString host_name;
     QString master_uri;

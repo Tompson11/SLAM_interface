@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <roscorewidget.h>
+#include <sensorwidget.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -19,6 +20,9 @@ public:
 private:
     Ui::MainWindow *ui;
 
-    RoscoreWidget *a;
+    RoscoreWidget *roscore_widget;
+    SensorWidget *camera_widget;
+    SensorWidget *lidar_widget;
+    SensorWidget *imu_widget;
 };
 #endif // MAINWINDOW_H

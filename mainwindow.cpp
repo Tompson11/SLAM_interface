@@ -10,8 +10,17 @@ MainWindow::MainWindow(QWidget *parent)
 
     utils::ShellPool<utils::SHELL_BASH>::getInstance().setParent(this);
 
-    a = new RoscoreWidget(this);
-    a->setGeometry(0,0,500,500);
+    roscore_widget = new RoscoreWidget(this);
+
+    lidar_widget = new SensorWidget(this);
+    lidar_widget->setRoscoreWidget(roscore_widget);
+
+    QWidget *mainwidget = new QWidget(this);
+    QGridLayout *layout = new QGridLayout(mainwidget);
+    layout->addWidget(roscore_widget, 0, 0, 1, 3);
+    layout->addWidget(lidar_widget, 1, 0, 1, 1);
+    mainwidget->setLayout(layout);
+    setCentralWidget(mainwidget);
 }
 
 MainWindow::~MainWindow()
