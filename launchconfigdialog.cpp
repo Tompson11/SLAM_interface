@@ -1,11 +1,16 @@
 #include "launchconfigdialog.h"
 #include <iostream>
-LaunchConfigDialog::LaunchConfigDialog(QWidget *parent, LaunchTableView *table_view): QDialog(parent), tableview(table_view)
+
+LaunchConfigDialog::LaunchConfigDialog(QWidget *parent): QDialog(parent)
 {
     message_box = new QMessageBox(this);
     message_box->setInformativeText("Do you want to delete them?");
     message_box->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
     message_box->setDefaultButton(QMessageBox::No);
+}
+
+void LaunchConfigDialog::setTableView(LaunchTableView* table_view) {
+    this->tableview = table_view;
 }
 
 void LaunchConfigDialog::closeEvent(QCloseEvent *event) {

@@ -9,11 +9,6 @@ LaunchTableView::LaunchTableView(QWidget *parent) : QTableView(parent)
     model_->setHeaderData(1, Qt::Horizontal, "Workspace");
     model_->setHeaderData(2, Qt::Horizontal, "Launch File");
 
-    QList<QStandardItem*> items;
-    items << new QStandardItem("fast_lio") << new QStandardItem("/home/zhangzhuo/catkin_ws") << new QStandardItem("/home/zhangzhuo/catkin_ws/src/fast_lio/launch/mapping_velodyne.launch");
-    this->addRow(0, items);
-    emit launchTableUpdate();
-
     select_model_ = new QItemSelectionModel(model_);
 
     this->setModel(model_);
@@ -24,6 +19,13 @@ LaunchTableView::LaunchTableView(QWidget *parent) : QTableView(parent)
 
     connect(model_, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)), this, SLOT(onDataChanged(QModelIndex,QModelIndex,QVector<int>)));
 
+}
+
+void LaunchTableView::loadHistoryConfig() {
+    QList<QStandardItem*> items;
+    items << new QStandardItem("fast_lio") << new QStandardItem("/home/zhangzhuo/catkin_ws") << new QStandardItem("/home/zhangzhuo/catkin_ws/src/fast_lio/launch/mapping_velodyne.launch");
+    this->addRow(0, items);
+    notifyUpdate();
 }
 
 QString LaunchTableView::getIncompleteRowsInQString(QString seperator) {

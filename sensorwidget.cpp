@@ -7,7 +7,19 @@ SensorWidget::SensorWidget(QWidget *parent) : QWidget(parent)
 
     toggle_start = new QtMaterialToggle(this);
 
+    label_sensor = new QLabel(this);
+    label_sensor->setText("Sensor");
+
     combo_sensor = new QComboBox(this);
+
+    label_topic =  new QLabel(this);
+    label_topic->setText("Topic");
+
+    checkbox_hz = new QtMaterialCheckBox(this);
+    checkbox_hz->setText("Hz");
+
+    combo_topic = new FocusInComboBox(this);
+    combo_topic->setEnabled(false);
 
     label_hz = new QLabel(this);
 
@@ -15,18 +27,23 @@ SensorWidget::SensorWidget(QWidget *parent) : QWidget(parent)
     button_config->setText("Configure");
 
     QGridLayout *layout = new QGridLayout(this);
-    layout->addWidget(label_sensor_icon, 0, 0, 1, 1);
-    layout->addWidget(toggle_start, 1, 0, 1, 1);
-    layout->addWidget(combo_sensor, 2, 0, 1, 1);
-    layout->addWidget(label_hz, 3, 0 ,1, 1);
-    layout->addWidget(button_config, 4, 0 ,1, 1);
+    layout->addWidget(label_sensor_icon, 0, 0, 2, 1);
+    layout->addWidget(toggle_start, 2, 0, 1, 1);
+    layout->addWidget(label_sensor, 0, 1, 1, 1);
+    layout->addWidget(combo_sensor, 0, 2, 1, 1);
+    layout->addWidget(label_topic, 1, 1, 1, 1);
+    layout->addWidget(combo_topic, 1, 2, 1, 1);
+    layout->addWidget(checkbox_hz, 2, 1 ,1, 1);
+    layout->addWidget(label_hz, 2, 2 ,1, 1);
+    layout->addWidget(button_config, 3, 1 ,1, 1);
     this->setLayout(layout);
 
+    dialog_config = new LaunchConfigDialog(this);
+
     table_in_dialog = new LaunchTableView(dialog_config);
+    dialog_config->setTableView(table_in_dialog);
     button_add_in_dialog = new QtMaterialRaisedButton(dialog_config);
     button_add_in_dialog->setText("Add");
-
-    dialog_config = new LaunchConfigDialog(this, table_in_dialog);
 
     button_delete_in_dialog = new QtMaterialRaisedButton(dialog_config);
     button_delete_in_dialog->setText("Delete");
@@ -45,8 +62,16 @@ SensorWidget::SensorWidget(QWidget *parent) : QWidget(parent)
     connect(button_config, &QtMaterialRaisedButton::clicked, this, &SensorWidget::onButtonConfigureClicked);
 
     connect(toggle_start, SIGNAL(toggled(bool)), this, SLOT(onToggled(bool)));
+    connect(checkbox_hz, SIGNAL(toggled(bool)), this, SLOT(onHzChecked(bool)));
 
-    connect(table_in_dialog, SIGNAL(launchTableUpdate()), this, SLOT(updateCombo()));
+    connect(table_in_dialog, SIGNAL(launchTableUpdate()), this, SLOT(updateSensorCombo()));
+    connect(combo_topic, SIGNAL(focusIn()), this, SLOT(updateTopicCombo()));
+    connect(combo_topic, SIGNAL(currentTextChanged(QString)), this, SLOT(onTopicChanged(QString)));
+
+    connect(&timer_topic, &QTimer::timeout, this, &SensorWidget::onHzOutput);
+
+    table_in_dialog->loadHistoryConfig();
+
 }
 
 void SensorWidget::setRoscoreWidget(RoscoreWidget *ptr) {
@@ -109,8 +134,107 @@ void SensorWidget::onToggled(bool tog) {
     }
 }
 
-void SensorWidget::updateCombo() {
+void SensorWidget::updateSensorCombo() {
     QStringList &&all_sensors = table_in_dialog->getAllKeys();
     combo_sensor->clear();
     combo_sensor->addItems(all_sensors);
+}
+
+void SensorWidget::onTopicChanged(const QString &text) {
+    if(text.isEmpty() || cur_monitored_topic == text)
+        return;
+
+    stopMonitorTopicHz();
+    monitorTopicHz(text);
+}
+
+void SensorWidget::onHzChecked(bool tog) {
+    if(tog) {
+        combo_topic->setEnabled(true);
+
+        if(!combo_topic->currentText().isEmpty()) {
+            monitorTopicHz(combo_topic->currentText());
+        }
+    }
+    else {
+        combo_topic->setEnabled(false);
+
+        stopMonitorTopicHz();
+    }
+}
+
+void SensorWidget::monitorTopicHz(const QString &topic) {
+    auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
+    process_topic = pool.getOneProcess();
+
+    QString cmd;
+    if(roscore_widget->getSourceROSCmd(cmd)) {
+        cur_monitored_topic = topic;
+
+        QStringList arguments;
+        cmd += "export PYTHONUNBUFFERED=1;";
+        cmd += "rostopic hz " + topic + ";";
+        arguments << "-c" << cmd;
+        process_topic->setArguments(arguments);
+        process_topic->start();
+
+        timer_topic.setInterval(1000);
+        timer_topic.start();
+    }
+}
+
+void SensorWidget::stopMonitorTopicHz() {
+    if(process_topic) {
+        cur_monitored_topic.clear();
+
+        utils::killSystemProcess(nullptr, "rostopic", QString::number(process_topic->pid()));
+        process_topic->terminate();
+        process_topic->waitForFinished();
+
+        auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
+        pool.returnOneProcess(process_topic);
+        process_topic = nullptr;
+
+        timer_topic.stop();
+    }
+}
+
+void SensorWidget::onHzOutput() {
+    QString out_str;
+    utils::getQProcessStandardOutput(process_topic, out_str, true);
+
+    QStringList extract_ret = utils::extractNumberAfterString(out_str, "average rate: ");
+    if(extract_ret.size() > 0) {
+        label_hz->setText(extract_ret[0]);
+    }
+    else {
+        label_hz->setText("0.000");
+    }
+}
+
+void SensorWidget::updateTopicCombo() {
+    auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
+    QProcess *p = pool.getOneProcess();
+
+    QString cmd;
+    if(roscore_widget->getSourceROSCmd(cmd)) {
+        QStringList arguments;
+        cmd += "rostopic list;";
+        arguments << "-c" << cmd;
+        p->setArguments(arguments);
+        p->start();
+        p->waitForFinished();
+
+        QString out_str;
+        utils::getQProcessStandardOutput(p, out_str, true);
+
+        if(!out_str.isEmpty()) {
+            QStringList topic_list = out_str.split("\n");
+            topic_list.push_front("");
+            combo_topic->clear();
+            combo_topic->addItems(topic_list);
+        }
+    }
+
+    pool.returnOneProcess(p);
 }

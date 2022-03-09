@@ -16,6 +16,7 @@ public:
     bool key_changed = false;
 
     explicit LaunchTableView(QWidget *parent = nullptr);
+    void loadHistoryConfig();
     bool existIncompleteRows();
     bool isKeyReapted(const QString &key);
     bool deleteKey(const QString &key);

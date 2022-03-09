@@ -17,6 +17,7 @@ SOURCES += \
     components/lib/qtmaterialstatetransition.cpp \
     components/lib/qtmaterialstyle.cpp \
     components/lib/qtmaterialtheme.cpp \
+    components/qtmaterialcheckbox.cpp \
     components/qtmaterialcircularprogress.cpp \
     components/qtmaterialcircularprogress_internal.cpp \
     components/qtmaterialdialog.cpp \
@@ -31,12 +32,14 @@ SOURCES += \
     components/qtmaterialtoggle.cpp \
     components/qtmaterialtoggle_internal.cpp \
     filedelegate.cpp \
+    focusincombobox.cpp \
     launchconfigdialog.cpp \
     launchtableview.cpp \
     main.cpp \
     mainwindow.cpp \
     roscorewidget.cpp \
     sensorwidget.cpp \
+    utils/reg.cpp \
     utils/sys.cpp
 
 HEADERS += \
@@ -52,6 +55,8 @@ HEADERS += \
     components/lib/qtmaterialstyle_p.h \
     components/lib/qtmaterialtheme.h \
     components/lib/qtmaterialtheme_p.h \
+    components/qtmaterialcheckbox.h \
+    components/qtmaterialcheckbox_p.h \
     components/qtmaterialcircularprogress.h \
     components/qtmaterialcircularprogress_internal.h \
     components/qtmaterialcircularprogress_p.h \
@@ -73,11 +78,13 @@ HEADERS += \
     components/qtmaterialtoggle_internal.h \
     components/qtmaterialtoggle_p.h \
     filedelegate.h \
+    focusincombobox.h \
     launchconfigdialog.h \
     launchtableview.h \
     mainwindow.h \
     roscorewidget.h \
     sensorwidget.h \
+    utils/reg.h \
     utils/shellpool.h \
     utils/sys.h
 
@@ -91,3 +98,7 @@ TRANSLATIONS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    components/resources.qrc
+

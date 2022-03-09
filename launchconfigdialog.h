@@ -12,7 +12,8 @@ class LaunchConfigDialog : public QDialog
 {
     Q_OBJECT
 public:
-    LaunchConfigDialog(QWidget *parent = nullptr, LaunchTableView *table_view = nullptr);
+    LaunchConfigDialog(QWidget *parent = nullptr);
+    void setTableView(LaunchTableView* table_view = nullptr);
     void closeEvent(QCloseEvent *event);
 
 private:

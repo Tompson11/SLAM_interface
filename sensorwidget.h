@@ -19,11 +19,14 @@
 #include <unordered_map>
 #include "components/qtmaterialcircularprogress.h"
 #include "components/qtmaterialdialog.h"
+#include "components/qtmaterialcheckbox.h"
 #include "launchtableview.h"
 #include "launchconfigdialog.h"
 #include "roscorewidget.h"
+#include "focusincombobox.h"
 #include "utils/sys.h"
 #include "utils/shellpool.h"
+#include "utils/reg.h"
 
 class SensorWidget : public QWidget
 {
@@ -36,10 +39,19 @@ public:
 //    void leaveEvent(QEvent *e);
 
 private:
+    void monitorTopicHz(const QString &topic);
+    void stopMonitorTopicHz();
+
     QLabel *label_sensor_icon;
     QtMaterialToggle *toggle_start;
 
+    QLabel *label_sensor;
     QComboBox *combo_sensor;
+
+    QLabel *label_topic;
+    FocusInComboBox *combo_topic;
+
+    QtMaterialCheckBox *checkbox_hz;
     QLabel *label_hz;
 
     QtMaterialRaisedButton *button_config;
@@ -49,7 +61,12 @@ private:
     QtMaterialRaisedButton *button_add_in_dialog;
     QtMaterialRaisedButton *button_delete_in_dialog;
 
-    QProcess *process_launch;
+    QProcess *process_launch = nullptr;
+    QProcess *process_topic = nullptr;
+
+    QString cur_monitored_topic;
+
+    QTimer timer_topic;
 
     RoscoreWidget *roscore_widget;
 
@@ -60,7 +77,11 @@ private slots:
     void onButtonAddClicked();
     void onButtonDeleteClicked();
     void onButtonConfigureClicked();
-    void updateCombo();
+    void onHzChecked(bool tog);
+    void onTopicChanged(const QString &text);
+    void onHzOutput();
+    void updateTopicCombo();
+    void updateSensorCombo();
 };
 
 #endif // SENSORWIDGET_H
