@@ -968,5 +968,6 @@
         <file>icons/social/svg/production/ic_sentiment_very_satisfied_24px.svg</file>
         <file>icons/social/svg/production/ic_share_24px.svg</file>
         <file>icons/social/svg/production/ic_whatshot_24px.svg</file>
+        <file>icons/slam_interface/svg/home.svg</file>
     </qresource>
 </RCC>

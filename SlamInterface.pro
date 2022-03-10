@@ -35,10 +35,14 @@ SOURCES += \
     focusincombobox.cpp \
     launchconfigdialog.cpp \
     launchtableview.cpp \
+    launchwidget.cpp \
     main.cpp \
     mainwindow.cpp \
     roscorewidget.cpp \
+    sensorlaunchtableview.cpp \
     sensorwidget.cpp \
+    slamlaunchtableview.cpp \
+    slamwidget.cpp \
     utils/reg.cpp \
     utils/sys.cpp
 
@@ -81,9 +85,13 @@ HEADERS += \
     focusincombobox.h \
     launchconfigdialog.h \
     launchtableview.h \
+    launchwidget.h \
     mainwindow.h \
     roscorewidget.h \
+    sensorlaunchtableview.h \
     sensorwidget.h \
+    slamlaunchtableview.h \
+    slamwidget.h \
     utils/reg.h \
     utils/shellpool.h \
     utils/sys.h
@@ -101,4 +109,3 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     components/resources.qrc
-

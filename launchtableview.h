@@ -16,7 +16,7 @@ public:
     bool key_changed = false;
 
     explicit LaunchTableView(QWidget *parent = nullptr);
-    void loadHistoryConfig();
+    virtual void loadHistoryConfig() = 0;
     bool existIncompleteRows();
     bool isKeyReapted(const QString &key);
     bool deleteKey(const QString &key);
@@ -28,14 +28,9 @@ public:
     void deleteRow(int row);
     void notifyUpdate();
 
-private slots:
-    void onDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int> ());
+protected:
+    virtual bool isRowIncomplete(int row) = 0;
 
-signals:
-    void launchTableUpdate();
-
-private:
-    bool isRowIncomplete(int row);
     bool lookupIncompleteRow(int row, std::list<int>::iterator &it);
     void addIncompleteRow(int row, bool row_reduce);
     void addIncompleteRow(int row, bool row_reduce, std::list<int>::iterator &it);
@@ -47,6 +42,13 @@ private:
 
     QStandardItemModel *model_;
     QItemSelectionModel *select_model_;
+
+private slots:
+    void onDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int> ());
+
+signals:
+    void launchTableUpdate();
+
 };
 
 #endif // LAUNCHTABLEVIEW_H

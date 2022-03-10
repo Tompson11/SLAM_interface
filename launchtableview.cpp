@@ -3,29 +3,7 @@
 
 LaunchTableView::LaunchTableView(QWidget *parent) : QTableView(parent)
 {
-    model_ = new QStandardItemModel(this);
-    model_->setColumnCount(3);
-    model_->setHeaderData(0, Qt::Horizontal, "Sensor Name");
-    model_->setHeaderData(1, Qt::Horizontal, "Workspace");
-    model_->setHeaderData(2, Qt::Horizontal, "Launch File");
-
-    select_model_ = new QItemSelectionModel(model_);
-
-    this->setModel(model_);
-    this->setSelectionModel(select_model_);
-    this->setSelectionMode(QAbstractItemView::SingleSelection);
-    this->setSelectionBehavior(QAbstractItemView::SelectItems);
-    this->setItemDelegate(new FileDelegate(this, this));
-
-    connect(model_, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)), this, SLOT(onDataChanged(QModelIndex,QModelIndex,QVector<int>)));
-
-}
-
-void LaunchTableView::loadHistoryConfig() {
-    QList<QStandardItem*> items;
-    items << new QStandardItem("fast_lio") << new QStandardItem("/home/zhangzhuo/catkin_ws") << new QStandardItem("/home/zhangzhuo/catkin_ws/src/fast_lio/launch/mapping_velodyne.launch");
-    this->addRow(0, items);
-    notifyUpdate();
+//    connect(model_, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)), this, SLOT(onDataChanged(QModelIndex,QModelIndex,QVector<int>)));
 }
 
 QString LaunchTableView::getIncompleteRowsInQString(QString seperator) {
@@ -102,20 +80,9 @@ void LaunchTableView::addRow(int row, QList<QStandardItem*> &items) {
         key_set.insert(items.front()->text().toStdString());
     }
 
-    bool is_row_incomplete = items.size() < 3;
-    if(!is_row_incomplete) {
-        for(auto it = items.begin(); it != items.begin() + model_->columnCount(); it++) {
-            if((*it)->text().isEmpty()) {
-                is_row_incomplete = true;
-                break;
-            }
-        }
-    }
-
-    if(is_row_incomplete) {
+    if(isRowIncomplete(row)) {
         addIncompleteRow(row, true);
     }
-
 }
 
 void LaunchTableView::deleteRow(int row) {
@@ -129,18 +96,6 @@ void LaunchTableView::deleteRow(int row) {
 
         model_->removeRow(row);
     }
-}
-
-bool LaunchTableView::isRowIncomplete(int row) {
-    if(row >= model_->rowCount())
-        return true;
-
-    for(int col = 0; col < model_->columnCount(); col++) {
-        if(model_->data(model_->index(row, col)).toString().size() == 0)
-            return true;
-    }
-
-    return false;
 }
 
 void LaunchTableView::onDataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles) {
@@ -176,8 +131,8 @@ bool LaunchTableView::addKey(const QString &key) {
 
 QStringList LaunchTableView::getAllKeys() {
     QStringList ret;
-    for(auto it = key_set.begin(); it != key_set.end(); it++) {
-        ret << QString::fromStdString(*it);
+    for(int i = 0; i < model_->rowCount(); i++) {
+        ret << model_->data(model_->index(i, 0)).toString();
     }
     return ret;
 }

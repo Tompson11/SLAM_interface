@@ -11,6 +11,8 @@
 #include <QGridLayout>
 #include <QTimer>
 #include <QFileDialog>
+#include <QSettings>
+#include <QPixmap>
 #include "components/qtmaterialtextfield.h"
 #include "components/qtmaterialraisedbutton.h"
 #include "components/qtmaterialtoggle.h"
@@ -25,6 +27,8 @@ class RoscoreWidget : public QWidget
 public:
     explicit RoscoreWidget(QWidget *parent = nullptr);
     bool getSourceROSCmd(QString &cmd);
+    void saveCurrentConfig(QSettings *settings, const QString &group);
+    void loadConfig(QSettings *settings, const QString &group);
     ~RoscoreWidget();
 
 private:

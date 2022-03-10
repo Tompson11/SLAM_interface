@@ -3,7 +3,7 @@
 #include "utils/sys.h"
 #include <iostream>
 
-FileDelegate::FileDelegate(QWidget *parent, LaunchTableView *table_view): QItemDelegate(parent), tableview(table_view)
+FileDelegate::FileDelegate(QWidget *parent, LaunchTableView *table_view): QStyledItemDelegate(parent), tableview(table_view)
 {
 
 }
@@ -39,27 +39,7 @@ QWidget* FileDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem 
 }
 
 void FileDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const {
-    if(index.column() > 0) {
-        QFileDialog *dialog = static_cast<QFileDialog *>(editor);
-        if(dialog->result() == QDialog::Accepted) {
-            QStringList filename = dialog->selectedFiles();
-
-            if(index.column() == 1) {
-                if(utils::existDir(filename[0] + "/devel/setup.bash")) {
-                    model->setData(index, filename[0]);
-                }
-                else {
-                    QString filename_ori = model->data(index).toString();
-                    model->setData(index, filename_ori);
-                    QMessageBox::critical(tableview, "Invalid workspace path", "Please select valid ROS workspace path!");
-                }
-            }
-            else {
-                model->setData(index, filename[0]);
-            }
-        }
-    }
-    else{
+    if(index.column() == 0) {
         QLineEdit *line_edit = static_cast<QLineEdit *>(editor);
         QString ori_data = model->data(index).toString();
         QString new_data = line_edit->text().trimmed();
@@ -82,4 +62,81 @@ void FileDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, cons
             QMessageBox::critical(tableview, "Repeated Key", "Name should be unique!");
         }
     }
+    else if(index.column() < 3)
+    {
+        QFileDialog *dialog = static_cast<QFileDialog *>(editor);
+        if(dialog->result() == QDialog::Accepted) {
+            QStringList filename = dialog->selectedFiles();
+
+            if(index.column() == 1) {
+                if(utils::existDir(filename[0] + "/devel/setup.bash")) {
+                    model->setData(index, filename[0]);
+                }
+                else {
+                    QString filename_ori = model->data(index).toString();
+                    model->setData(index, filename_ori);
+                    QMessageBox::critical(tableview, "Invalid workspace path", "Please select valid ROS workspace path!");
+                }
+            }
+            else {
+                model->setData(index, filename[0]);
+            }
+        }
+    }
+    else{
+
+    }
+}
+
+void FileDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const {
+    QStyleOptionViewItem viewOption(option);
+    initStyleOption(&viewOption, index);
+    if (option.state.testFlag(QStyle::State_HasFocus))
+        viewOption.state = viewOption.state ^ QStyle::State_HasFocus;
+
+    viewOption.decorationAlignment = Qt::AlignCenter;
+    viewOption.decorationPosition = QStyleOptionViewItem::Top;
+    viewOption.decorationSize = QSize(20,20);
+    QStyledItemDelegate::paint(painter, viewOption, index);
+
+    if (index.column() > 2)
+    {
+        bool data = index.model()->data(index, Qt::UserRole).toBool();
+
+        QStyleOptionButton check_box_style_option;
+        check_box_style_option.state |= QStyle::State_Enabled;
+        if(data)
+        {
+            check_box_style_option.state |= QStyle::State_On;
+        }
+        else
+        {
+            check_box_style_option.state |= QStyle::State_Off;
+        }
+
+        check_box_style_option.rect = QRect(option.rect.topLeft().x() + option.rect.width() / 2 - 4,
+                                            option.rect.topLeft().y() + option.rect.height() / 2,
+                                            0,
+                                            0);
+        QApplication::style()->drawControl(QStyle::CE_CheckBox,&check_box_style_option,painter);
+    }
+}
+
+bool FileDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index)
+{
+    QRect checkbox_rect = QRect(option.rect.topLeft().x() + option.rect.width() / 2 - 10,
+                                option.rect.topLeft().y() + option.rect.height() / 2 - 10,
+                                20,
+                                20);
+    QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+    if (event->type() == QEvent::MouseButtonPress && checkbox_rect.contains(mouseEvent->pos()))
+    {
+        if (index.column() > 2)
+        {
+            bool data = model->data(index, Qt::UserRole).toBool();
+            model->setData(index, !data, Qt::UserRole);
+        }
+    }
+
+    return QStyledItemDelegate::editorEvent(event, model, option, index);
 }

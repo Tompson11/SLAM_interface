@@ -2,6 +2,10 @@
 #include "utils/shellpool.h"
 #include "utils/sys.h"
 #include <iostream>
+#include <QPainter>
+#include <QtSvg/QtSvg>
+#include <QtSvg/QSvgWidget>
+#include <QtSvg/QSvgRenderer>
 
 RoscoreWidget::RoscoreWidget(QWidget *parent) : QWidget(parent)
 {
@@ -18,9 +22,13 @@ RoscoreWidget::RoscoreWidget(QWidget *parent) : QWidget(parent)
     dialog_file->setFileMode( QFileDialog::DirectoryOnly );
 
     label_roscore_icon = new QLabel(this);
-    label_roscore_icon->setText("Roscore Icon");
+    label_roscore_icon->setMinimumSize(QSize(80,80));
+    label_roscore_icon->setStyleSheet("QLabel{"
+                             "image:url(:/icons/icons/slam_interface/svg/home.svg);"
+                             "}");
 
     toggle_start = new QtMaterialToggle(this);
+    toggle_start->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
     text_master_uri = new QtMaterialTextField(this);
     text_master_uri->setLabel("ROS_MASTER_URI");
@@ -32,20 +40,22 @@ RoscoreWidget::RoscoreWidget(QWidget *parent) : QWidget(parent)
     button_localip->setText("Use Local IP");
 
     snack = new QtMaterialSnackbar(this);
+    snack->setFixedHeight(80);
 
     progress_open = new QtMaterialCircularProgress(this);
     progress_open->setVisible(false);
 
     QGridLayout *layout = new QGridLayout();
-    layout->addWidget(label_roscore_icon, 0, 0, 2, 1);
-    layout->addWidget(progress_open, 0, 0, 2, 1);
-    layout->addWidget(toggle_start, 2, 0, 1, 1);
+    layout->setHorizontalSpacing(20);
+    layout->addWidget(progress_open, 0, 0, 2, 1, Qt::AlignCenter);
+    layout->addWidget(label_roscore_icon, 0, 0, 2, 1, Qt::AlignCenter);
+    layout->addWidget(toggle_start, 2, 0, 1, 1, Qt::AlignCenter);
     layout->addWidget(text_rospath, 0, 1 ,1, 1);
     layout->addWidget(button_dialog, 0, 2, 1, 2);
     layout->addWidget(text_master_uri, 1, 1, 1, 1);
     layout->addWidget(button_localhost, 1, 2, 1, 1);
     layout->addWidget(button_localip, 1, 3, 1, 1);
-    layout->addWidget(snack, 2, 1, 1, 3);
+    layout->addWidget(snack, 2, 1, 1, 1);
     this->setLayout(layout);
 
     auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
@@ -67,14 +77,30 @@ RoscoreWidget::RoscoreWidget(QWidget *parent) : QWidget(parent)
 
     connect(&timer_ros_detect, &QTimer::timeout, this, &RoscoreWidget::handleROSOpenError);
     connect(&timer_rosopen, &QTimer::timeout, this, &RoscoreWidget::detectRosOpen);
-
-    text_rospath->setText("/opt/ros/noetic");
 }
 
 RoscoreWidget::~RoscoreWidget() {
     if(process_roscore->state() == QProcess::Running) {
         process_roscore->kill();
         process_roscore->waitForFinished();
+    }
+}
+
+void RoscoreWidget::saveCurrentConfig(QSettings *settings, const QString &group) {
+    if(settings) {
+        settings->beginGroup(group);
+        settings->setValue("ROS_PATH", text_rospath->text().trimmed());
+        settings->setValue("ROS_MASTER_URI", text_master_uri->text().trimmed());
+        settings->endGroup();
+    }
+}
+
+void RoscoreWidget::loadConfig(QSettings *settings, const QString &group) {
+    if(settings) {
+        settings->beginGroup(group);
+        text_rospath->setText(settings->value("ROS_PATH").toString());
+        text_master_uri->setText(settings->value("ROS_MASTER_URI").toString());
+        settings->endGroup();
     }
 }
 
