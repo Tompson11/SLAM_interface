@@ -1,22 +1,66 @@
 #include "sensorwidget.h"
 
-SensorWidget::SensorWidget(QWidget *parent) : LaunchWidget(parent)
+SensorWidget::SensorWidget(QWidget *parent, const SensorType &type, const QColor& unact_color, const QColor& act_color) : LaunchWidget(parent, unact_color, act_color)
 {
-    QGridLayout *layout = new QGridLayout(this);
-    layout->addWidget(progress_open, 0, 0, 2, 1);
-    layout->addWidget(label_main_icon, 0, 0, 2, 1);
-    layout->addWidget(toggle_start, 2, 0, 1, 1);
-    layout->addWidget(label_launch_items, 0, 1, 1, 1);
-    layout->addWidget(combo_launch_items, 0, 2, 1, 1);
-    layout->addWidget(label_topic, 1, 1, 1, 1);
-    layout->addWidget(combo_topic, 1, 2, 1, 1);
-    layout->addWidget(checkbox_hz, 2, 1 ,1, 1);
-    layout->addWidget(label_hz, 2, 2 ,1, 1);
-    layout->addWidget(button_config, 3, 1 ,1, 1);
-    this->setLayout(layout);
+    switch (type) {
+    case SensorType::CAMERA: {
+        label_title->setText("CAMERA");
+        label_main_icon->setStyleSheet("QLabel{"
+                                 "image:url(:/icons/icons/slam_interface/svg/camera.svg);"
+                                 "}");
+        break;
+    }
+    case SensorType::IMU: {
+        label_title->setText("IMU");
+        label_main_icon->setStyleSheet("QLabel{"
+                                 "image:url(:/icons/icons/slam_interface/svg/imu.svg);"
+                                 "}");
+        break;
+    }
+    default: {
+        label_title->setText("LIDAR");
+        label_main_icon->setStyleSheet("QLabel{"
+                                 "image:url(:/icons/icons/slam_interface/svg/lidar.svg);"
+                                 "}");
+        break;
+    }
+    }
+
+
+    label_launch_items->setText("Sensor");
+    label_launch_items->setFixedWidth(50);
+
+    label_topic->setFixedWidth(50);
 
     table_in_dialog = new SensorLaunchTableView(dialog_config);
+    dialog_layout->addWidget(table_in_dialog, 0, 0, 3, 1);
     dialog_config->setTableView(table_in_dialog);
+    connect(table_in_dialog, SIGNAL(launchTableUpdate()), this, SLOT(updateLaunchCombo()));
+
+
+    /*
+    QGridLayout *layout = new QGridLayout(this);
+    layout->addWidget(toggle_start, 0, 0, 1, 1, Qt::AlignCenter);
+    layout->addWidget(label_title, 0, 1, 1, 2, Qt::AlignCenter);
+    layout->addWidget(progress_open, 1, 0, 2, 1);
+    layout->addWidget(label_main_icon, 1, 0, 2, 1);
+    layout->addWidget(label_launch_items, 1, 1, 1, 1);
+    layout->addWidget(combo_launch_items, 1, 2, 1, 1);
+    layout->addWidget(label_topic, 2, 1, 1, 1);
+    layout->addWidget(combo_topic, 2, 2, 1, 1);
+    layout->addWidget(button_config, 3, 0 ,1, 1);
+    layout->addWidget(checkbox_hz, 3, 1 ,1, 1);
+    layout->addWidget(label_hz, 3, 2 ,1, 1);
+
+    mainframe = new QFrame(this);
+    mainframe->setFrameStyle(QFrame::StyledPanel);
+    mainframe->setLayout(layout);
+    mainframe->setFrameShadow(QFrame::Sunken);
+    QGridLayout *mainlayout = new QGridLayout();
+    mainlayout->addWidget(mainframe);
+    this->setLayout(mainlayout);
+
+
     button_add_in_dialog = new QtMaterialRaisedButton(dialog_config);
     button_add_in_dialog->setText("Add");
 
@@ -42,6 +86,7 @@ SensorWidget::SensorWidget(QWidget *parent) : LaunchWidget(parent)
 
     connect(&timer_topic, &QTimer::timeout, this, &SensorWidget::onHzOutput);
     connect(&timer_roslaunch_detect, &QTimer::timeout, this, &SensorWidget::detectRoslaunchResult);
+    */
 }
 
 void SensorWidget::saveCurrentConfig(QSettings *settings, const QString &group) {

@@ -16,7 +16,6 @@ public:
     bool key_changed = false;
 
     explicit LaunchTableView(QWidget *parent = nullptr);
-    virtual void loadHistoryConfig() = 0;
     bool existIncompleteRows();
     bool isKeyReapted(const QString &key);
     bool deleteKey(const QString &key);
@@ -29,7 +28,7 @@ public:
     void notifyUpdate();
 
 protected:
-    virtual bool isRowIncomplete(int row) = 0;
+    virtual bool isRowIncomplete(int row);
 
     bool lookupIncompleteRow(int row, std::list<int>::iterator &it);
     void addIncompleteRow(int row, bool row_reduce);

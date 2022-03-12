@@ -11,6 +11,9 @@ RoscoreWidget::RoscoreWidget(QWidget *parent) : QWidget(parent)
 {
     this->state = INITIALIZATION;
 
+    label_title = new QLabel(this);
+    label_title->setText("ROSCORE");
+
     text_rospath = new QtMaterialTextField(this);
     text_rospath->setLabel("ROS Installment Path");
 
@@ -47,16 +50,23 @@ RoscoreWidget::RoscoreWidget(QWidget *parent) : QWidget(parent)
 
     QGridLayout *layout = new QGridLayout();
     layout->setHorizontalSpacing(20);
-    layout->addWidget(progress_open, 0, 0, 2, 1, Qt::AlignCenter);
-    layout->addWidget(label_roscore_icon, 0, 0, 2, 1, Qt::AlignCenter);
-    layout->addWidget(toggle_start, 2, 0, 1, 1, Qt::AlignCenter);
-    layout->addWidget(text_rospath, 0, 1 ,1, 1);
-    layout->addWidget(button_dialog, 0, 2, 1, 2);
-    layout->addWidget(text_master_uri, 1, 1, 1, 1);
-    layout->addWidget(button_localhost, 1, 2, 1, 1);
-    layout->addWidget(button_localip, 1, 3, 1, 1);
-    layout->addWidget(snack, 2, 1, 1, 1);
-    this->setLayout(layout);
+    layout->addWidget(toggle_start, 0, 0, 1, 1, Qt::AlignCenter);
+    layout->addWidget(label_title, 0, 1, 1, 2, Qt::AlignCenter);
+    layout->addWidget(progress_open, 1, 0, 2, 1, Qt::AlignCenter);
+    layout->addWidget(label_roscore_icon, 1, 0, 2, 1, Qt::AlignCenter);
+    layout->addWidget(text_rospath, 1, 1 ,1, 1);
+    layout->addWidget(button_dialog, 1, 2, 1, 2);
+    layout->addWidget(text_master_uri, 2, 1, 1, 1);
+    layout->addWidget(button_localhost, 2, 2, 1, 1);
+    layout->addWidget(button_localip, 2, 3, 1, 1);
+
+    mainframe = new QFrame(this);
+    mainframe->setFrameStyle(QFrame::StyledPanel);
+    mainframe->setLayout(layout);
+    mainframe->setFrameShadow(QFrame::Sunken);
+    QGridLayout *mainlayout = new QGridLayout();
+    mainlayout->addWidget(mainframe);
+    this->setLayout(mainlayout);
 
     auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
     process_roscore = pool.getOneProcess();

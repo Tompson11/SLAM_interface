@@ -969,5 +969,9 @@
         <file>icons/social/svg/production/ic_share_24px.svg</file>
         <file>icons/social/svg/production/ic_whatshot_24px.svg</file>
         <file>icons/slam_interface/svg/home.svg</file>
+        <file>icons/slam_interface/svg/camera.svg</file>
+        <file>icons/slam_interface/svg/lidar.svg</file>
+        <file>icons/slam_interface/svg/imu.svg</file>
+        <file>icons/slam_interface/svg/slam.svg</file>
     </qresource>
 </RCC>

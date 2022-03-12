@@ -48,6 +48,7 @@ private:
     QtMaterialRaisedButton *button_localip;
     QtMaterialRaisedButton *button_dialog;
 
+    QLabel *label_title;
     QLabel *label_roscore_icon;
     QLabel *label_ros_path;
 
@@ -60,6 +61,8 @@ private:
     QtMaterialToggle *toggle_start;
     QtMaterialTextField *text_master_uri;
     QtMaterialSnackbar *snack;
+
+    QFrame *mainframe;
 
     QProcess *process_roscore = nullptr;
     QProcess *process_ros_detect = nullptr;

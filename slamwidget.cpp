@@ -1,19 +1,110 @@
 #include "slamwidget.h"
 
-SlamWidget::SlamWidget(QWidget *parent) : LaunchWidget(parent)
+SlamWidget::SlamWidget(QWidget *parent, const QColor& unact_color, const QColor& act_color) : LaunchWidget(parent, unact_color, act_color)
 {
-    QGridLayout *layout = new QGridLayout(this);
-    layout->addWidget(progress_open, 0, 0, 2, 1);
-    layout->addWidget(label_main_icon, 0, 0, 2, 1);
-    layout->addWidget(toggle_start, 2, 0, 1, 1);
-    layout->addWidget(label_launch_items, 0, 1, 1, 1);
+    label_title->setText("SLAM");
+    label_main_icon->setStyleSheet("QLabel{"
+                             "image:url(:/icons/icons/slam_interface/svg/slam.svg);"
+                             "}");
+
+    label_launch_items->setText("SLAM Algorithm");
+    label_launch_items->setFixedWidth(120);
+
+    label_topic->setFixedWidth(120);
+
+    table_in_dialog = new SlamLaunchTableView(dialog_config);
+    dialog_layout->addWidget(table_in_dialog, 0, 0, 3, 1);
+    dialog_config->setTableView(table_in_dialog);
+    connect(table_in_dialog, SIGNAL(launchTableUpdate()), this, SLOT(updateLaunchCombo()));
+
+/*
+    label_toggle_back->setFixedWidth(100);
+    label_toggle_back->setFixedHeight(10);
+//    label_toggle_back->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Maximum);
+//    label_toggle_back->setStyleSheet(
+//                            "background-color:#ff6600;"
+//                );
+
+
+    label_title->setText("SLAM");
+    label_title_back->setMinimumHeight(10);
+//    label_title_back->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+//    label_title_back->setStyleSheet("QLabel{"
+//                             "background-color:#ff6600;"
+//                             "}"
+//                );
+
+
+    label_main_icon->setFixedWidth(100);
+    label_main_icon->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    label_main_icon->setStyleSheet("QLabel{"
+                             "image:url(:/icons/icons/slam_interface/svg/slam.svg);"
+                             "}");
+
+    button_config->setFixedWidth(100);
+    button_config->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    label_launch_items->setText("SLAM Algorithm");
+//    label_launch_items->setFixedWidth(150);
+    label_launch_items->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+//    label_topic->setFixedWidth(150);
+    label_topic->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    QGridLayout *title_layout = new QGridLayout();
+    title_layout->addWidget(label_toggle_back, 0, 0, 1, 1);
+    title_layout->addWidget(toggle_start, 0, 0, 1, 1, Qt::AlignCenter);
+    title_layout->addWidget(label_title_back, 0, 1, 1, 3);
+    title_layout->addWidget(label_title, 0, 1, 1, 3, Qt::AlignCenter);
+    title_layout->setSpacing(0);
+
+    QFrame *title_frame = new QFrame(this);
+    title_frame->setLayout(title_layout);
+    title_frame->setStyleSheet(".QFrame{"
+                               "border-top-left-radius: 15px;"
+                               "border-top-right-radius: 15px;"
+                               "background-color:#ff6600;"
+                               "}"
+                               );
+
+
+    QGridLayout *layout = new QGridLayout();
+    layout->addWidget(label_main_icon, 0, 0, 2, 1, Qt::AlignCenter);
+    layout->addWidget(progress_open, 0, 0, 2, 1, Qt::AlignCenter);
+    layout->addWidget(label_launch_items, 0, 1, 1, 1, Qt::AlignVCenter);
     layout->addWidget(combo_launch_items, 0, 2, 1, 1);
-    layout->addWidget(label_topic, 1, 1, 1, 1);
+    layout->addWidget(label_topic, 1, 1, 1, 1, Qt::AlignVCenter);
     layout->addWidget(combo_topic, 1, 2, 1, 1);
+    layout->addWidget(button_config, 2, 0 ,1, 1);
     layout->addWidget(checkbox_hz, 2, 1 ,1, 1);
     layout->addWidget(label_hz, 2, 2 ,1, 1);
-    layout->addWidget(button_config, 3, 1 ,1, 1);
-    this->setLayout(layout);
+    layout->setSpacing(20);
+    layout->setMargin(10);
+
+
+    QFrame *backbone_frame = new QFrame(this);
+    backbone_frame->setLayout(layout);
+    backbone_frame->setStyleSheet(".QFrame{border:2px solid #ff6600;}"
+                                  ".QFrame:hover{border:2px solid #006600;}");
+
+//    QVBoxLayout *total_layout = new QVBoxLayout();
+//    total_layout->addLayout(title_layout);
+//    total_layout->addLayout(layout);
+//    total_layout->setMargin(0);
+
+    QVBoxLayout *mainlayout = new QVBoxLayout();
+    mainlayout->addWidget(title_frame, 0);
+    mainlayout->addWidget(backbone_frame, 0);
+    mainlayout->setSpacing(0);
+    this->setLayout(mainlayout);
+
+//    mainframe = new QFrame(this);
+////    mainframe->setFrameStyle(QFrame::StyledPanel);
+//    mainframe->setLayout(total_layout);
+////    mainframe->setFrameShadow(QFrame::Sunken);
+//    QGridLayout *mainlayout = new QGridLayout(this);
+//    mainlayout->addWidget(mainframe, 0, 0, Qt::AlignTop);
+//    this->setLayout(mainlayout);
 
     table_in_dialog = new SlamLaunchTableView(dialog_config);
     dialog_config->setTableView(table_in_dialog);
@@ -45,6 +136,7 @@ SlamWidget::SlamWidget(QWidget *parent) : LaunchWidget(parent)
 
     connect(&timer_topic, &QTimer::timeout, this, &SlamWidget::onHzOutput);
     connect(&timer_roslaunch_detect, &QTimer::timeout, this, &SlamWidget::detectRoslaunchResult);
+*/
 }
 
 void SlamWidget::saveCurrentConfig(QSettings *settings, const QString &group) {

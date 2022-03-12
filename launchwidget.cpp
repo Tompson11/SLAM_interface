@@ -1,17 +1,37 @@
 #include "launchwidget.h"
 
-LaunchWidget::LaunchWidget(QWidget *parent) : QWidget(parent)
+LaunchWidget::LaunchWidget(QWidget *parent, const QColor& unact_color, const QColor& act_color) :
+    QWidget(parent), unactivated_color(unact_color), activated_color(act_color)
 {
+    constructWidget();
+    constructLayout();
+    constructAnimation();
+    connectSignal();
+
+    this->setColor(unact_color);
+}
+
+void LaunchWidget::constructWidget() {
+    const int first_column_width = 100;
+    const int title_height = 50;
+
+    label_title = new QLabel(this);
+    label_title_back = new QLabel(this);
+
     progress_open = new QtMaterialCircularProgress(this);
     progress_open->setVisible(false);
 
     label_main_icon = new QLabel(this);
-    label_main_icon->setText("sensor icon");
+    label_main_icon->setMinimumSize(QSize(80,80));
+    label_main_icon->setFixedWidth(first_column_width);
 
     toggle_start = new QtMaterialToggle(this);
 
+    label_toggle_back = new QLabel(this);
+    label_toggle_back->setMinimumHeight(title_height);
+    label_toggle_back->setFixedWidth(first_column_width);
+
     label_launch_items = new QLabel(this);
-    label_launch_items->setText("Sensor");
 
     combo_launch_items = new QComboBox(this);
 
@@ -29,11 +49,115 @@ LaunchWidget::LaunchWidget(QWidget *parent) : QWidget(parent)
 
     button_config = new QtMaterialRaisedButton(this);
     button_config->setText("Configure");
+    button_config->setFixedWidth(first_column_width);
 
     dialog_config = new LaunchConfigDialog(this);
 
+    button_add_in_dialog = new QtMaterialRaisedButton(dialog_config);
+    button_add_in_dialog->setText("Add");
+
+    button_delete_in_dialog = new QtMaterialRaisedButton(dialog_config);
+    button_delete_in_dialog->setText("Delete");
+
     auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
     process_launch = pool.getOneProcess();
+}
+
+void LaunchWidget::constructLayout() {
+    title_layout = new QGridLayout();
+    title_layout->addWidget(label_toggle_back, 0, 0, 1, 1);
+    title_layout->addWidget(toggle_start, 0, 0, 1, 1, Qt::AlignCenter);
+    title_layout->addWidget(label_title_back, 0, 1, 1, 3);
+    title_layout->addWidget(label_title, 0, 1, 1, 3, Qt::AlignCenter);
+    title_layout->setSpacing(0);
+
+    title_frame = new QFrame(this);
+    title_frame->setLayout(title_layout);
+    title_frame->setStyleSheet(".QFrame{"
+                               "border-top-left-radius: 15px;"
+                               "border-top-right-radius: 15px;"
+                               "background-color:#ff6600;"
+                               "}"
+                               );
+
+
+    body_layout = new QGridLayout();
+    body_layout->addWidget(label_main_icon, 0, 0, 2, 1, Qt::AlignCenter);
+    body_layout->addWidget(progress_open, 0, 0, 2, 1, Qt::AlignCenter);
+    body_layout->addWidget(label_launch_items, 0, 1, 1, 1, Qt::AlignVCenter);
+    body_layout->addWidget(combo_launch_items, 0, 2, 1, 1);
+    body_layout->addWidget(label_topic, 1, 1, 1, 1, Qt::AlignVCenter);
+    body_layout->addWidget(combo_topic, 1, 2, 1, 1);
+    body_layout->addWidget(button_config, 2, 0 ,1, 1);
+    body_layout->addWidget(checkbox_hz, 2, 1 ,1, 1);
+    body_layout->addWidget(label_hz, 2, 2 ,1, 1);
+    body_layout->setSpacing(20);
+    body_layout->setMargin(10);
+
+    body_frame = new QFrame(this);
+    body_frame->setLayout(body_layout);
+    body_frame->setStyleSheet(".QFrame{border:2px solid #ff6600;}"
+                                  ".QFrame:hover{border:2px solid #006600;}");
+
+    main_layout = new QVBoxLayout();
+    main_layout->addWidget(title_frame, 0);
+    main_layout->addWidget(body_frame, 0);
+    main_layout->setSpacing(0);
+    this->setLayout(main_layout);
+
+    dialog_layout = new QGridLayout(dialog_config);
+    dialog_layout->addWidget(button_add_in_dialog, 0, 1, 1, 1);
+    dialog_layout->addWidget(button_delete_in_dialog, 1, 1, 1, 1);
+    dialog_config->setLayout(dialog_layout);
+}
+
+void LaunchWidget::constructAnimation() {
+    animation_activate = new QPropertyAnimation(this);
+    animation_activate->setPropertyName("color");
+    animation_activate->setTargetObject(this);
+    animation_activate->setStartValue(unactivated_color);
+    animation_activate->setEndValue(activated_color);
+    animation_activate->setDuration(300);
+
+    animation_unactivate = new QPropertyAnimation(this);
+    animation_unactivate->setPropertyName("color");
+    animation_unactivate->setTargetObject(this);
+    animation_unactivate->setStartValue(activated_color);
+    animation_unactivate->setEndValue(unactivated_color);
+    animation_unactivate->setDuration(300);
+
+    animation_wink = new QSequentialAnimationGroup(this);
+    animation_wink->setLoopCount(2);
+
+}
+
+void LaunchWidget::connectSignal() {
+    connect(button_config, &QtMaterialRaisedButton::clicked, this, &LaunchWidget::onButtonConfigureClicked);
+    connect(button_add_in_dialog, &QtMaterialRaisedButton::clicked, this, &LaunchWidget::onButtonAddClicked);
+    connect(button_delete_in_dialog, &QtMaterialRaisedButton::clicked, this, &LaunchWidget::onButtonDeleteClicked);
+
+    connect(toggle_start, SIGNAL(toggled(bool)), this, SLOT(onToggled(bool)));
+    connect(checkbox_hz, SIGNAL(toggled(bool)), this, SLOT(onHzChecked(bool)));
+
+
+//    connect(combo_topic, SIGNAL(focusIn()), this, SLOT(updateTopicCombo()));
+    connect(combo_topic, SIGNAL(currentTextChanged(QString)), this, SLOT(onTopicChanged(QString)));
+
+    connect(&timer_topic, &QTimer::timeout, this, &LaunchWidget::onHzOutput);
+    connect(&timer_roslaunch_detect, &QTimer::timeout, this, &LaunchWidget::detectRoslaunchResult);
+}
+
+void LaunchWidget::playWinkAnimation() {
+    animation_wink->clear();
+
+    if(toggle_start->isChecked()) {
+        animation_wink->addAnimation(animation_unactivate);
+        animation_wink->addAnimation(animation_activate);
+    }
+    else {
+        animation_wink->addAnimation(animation_activate);
+        animation_wink->addAnimation(animation_unactivate);
+    }
 }
 
 void LaunchWidget::setRoscoreWidget(RoscoreWidget *ptr) {
@@ -69,6 +193,7 @@ void LaunchWidget::onToggled(bool tog) {
         toggle_start->setEnabled(false);
         progress_open->setVisible(true);
         combo_launch_items->setEnabled(false);
+        animation_activate->start();
 
         int row = combo_launch_items->currentIndex();
         auto *model = table_in_dialog->model();
@@ -145,6 +270,8 @@ void LaunchWidget::onRoslaunchFail(bool reset_toggle, const QString &err_msg) {
         toggle_start->toggle();
         connect(toggle_start, SIGNAL(toggled(bool)),this, SLOT(onToggled(bool)));
     }
+
+    animation_unactivate->start();
 }
 
 void LaunchWidget::detectRoslaunchResult() {
@@ -315,4 +442,21 @@ void LaunchWidget::updateTopicCombo() {
     }
 
     pool.returnOneProcess(p);
+}
+
+void LaunchWidget::setColor(const QColor &color) {
+    this->current_color = color;
+
+    QString rgb_str = QString("rgb(%1,%2,%3)").arg(QString::number(color.red()), QString::number(color.green()), QString::number(color.blue()));
+    QString qss_title = QString(".QFrame{border:2px solid %1;background-color: %2;}").arg(rgb_str, rgb_str);
+    title_frame->setStyleSheet(qss_title);
+
+    QString qss_body = QString(".QFrame{border:2px solid %1;}").arg(rgb_str);
+    body_frame->setStyleSheet(qss_body);
+
+    update();
+}
+
+QColor LaunchWidget::color() const {
+    return this->current_color;
 }

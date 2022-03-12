@@ -3,7 +3,16 @@
 
 LaunchTableView::LaunchTableView(QWidget *parent) : QTableView(parent)
 {
-//    connect(model_, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)), this, SLOT(onDataChanged(QModelIndex,QModelIndex,QVector<int>)));
+    model_ = new QStandardItemModel(this);
+    select_model_ = new QItemSelectionModel(model_);
+
+    this->setModel(model_);
+    this->setSelectionModel(select_model_);
+    this->setSelectionMode(QAbstractItemView::SingleSelection);
+    this->setSelectionBehavior(QAbstractItemView::SelectItems);
+    this->setItemDelegate(new FileDelegate(this, this));
+
+    connect(model_, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)), this, SLOT(onDataChanged(QModelIndex,QModelIndex,QVector<int>)));
 }
 
 QString LaunchTableView::getIncompleteRowsInQString(QString seperator) {
@@ -143,4 +152,16 @@ void LaunchTableView::notifyUpdate() {
 
 bool LaunchTableView::existIncompleteRows() {
     return incomplete_rows.size() > 0;
+}
+
+bool LaunchTableView::isRowIncomplete(int row) {
+    if(row >= model_->rowCount())
+        return true;
+
+    for(int col = 0; col < model_->columnCount(); col++) {
+        if(model_->data(model_->index(row, col)).toString().size() == 0)
+            return true;
+    }
+
+    return false;
 }

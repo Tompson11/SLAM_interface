@@ -8,7 +8,7 @@ class SlamWidget : public LaunchWidget
 {
     Q_OBJECT
 public:
-    explicit SlamWidget(QWidget *parent = nullptr);
+    explicit SlamWidget(QWidget *parent = nullptr, const QColor& unact_color = QColor(255,255,255), const QColor& act_color = QColor(255,255,255));
     virtual void saveCurrentConfig(QSettings *settings, const QString &group);
     virtual void loadConfig(QSettings *settings, const QString &group);
 };

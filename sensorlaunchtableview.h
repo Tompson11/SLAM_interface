@@ -10,7 +10,6 @@ class SensorLaunchTableView : public LaunchTableView
     Q_OBJECT
 public:
     SensorLaunchTableView(QWidget *parent);
-    virtual void loadHistoryConfig();
 
 protected:
     bool isRowIncomplete(int row) override;

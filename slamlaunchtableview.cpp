@@ -2,7 +2,6 @@
 
 SlamLaunchTableView::SlamLaunchTableView(QWidget *parent) : LaunchTableView(parent)
 {
-    model_ = new QStandardItemModel(this);
     model_->setColumnCount(6);
     model_->setHeaderData(0, Qt::Horizontal, "Sensor Name");
     model_->setHeaderData(1, Qt::Horizontal, "Workspace");
@@ -10,16 +9,6 @@ SlamLaunchTableView::SlamLaunchTableView(QWidget *parent) : LaunchTableView(pare
     model_->setHeaderData(3, Qt::Horizontal, "LiDAR");
     model_->setHeaderData(4, Qt::Horizontal, "Camera");
     model_->setHeaderData(5, Qt::Horizontal, "IMU");
-
-    select_model_ = new QItemSelectionModel(model_);
-
-    this->setModel(model_);
-    this->setSelectionModel(select_model_);
-    this->setSelectionMode(QAbstractItemView::SingleSelection);
-    this->setSelectionBehavior(QAbstractItemView::SelectItems);
-    this->setItemDelegate(new FileDelegate(this, this));
-
-    connect(model_, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)), this, SLOT(onDataChanged(QModelIndex,QModelIndex,QVector<int>)));
 }
 
 bool SlamLaunchTableView::isRowIncomplete(int row) {
@@ -31,13 +20,10 @@ bool SlamLaunchTableView::isRowIncomplete(int row) {
             return true;
     }
 
-    return false;
-}
+    for(int col = 3; col < model_->columnCount(); col++) {
+        if(model_->data(model_->index(row, col), Qt::UserRole).toBool())
+            return false;
+    }
 
-void SlamLaunchTableView::loadHistoryConfig() {
-    QList<QStandardItem*> items;
-    items << new QStandardItem("fast_lio") << new QStandardItem("/home/zhangzhuo/catkin_ws") << new QStandardItem("/home/zhangzhuo/catkin_ws/src/fast_lio/launch/mapping_velodyne.launch")
-          << new QStandardItem("") << new QStandardItem("") << new QStandardItem("");
-    this->addRow(0, items);
-    notifyUpdate();
+    return true;
 }
