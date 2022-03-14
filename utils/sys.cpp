@@ -40,7 +40,6 @@ QStringList getSystemProcessID(QProcess *p_bash, const QString &p_name, const QS
 
     QString cmd;
     QStringList arguments;
-//    cmd = "ps -aef | grep " + p_name + " | grep -v grep | grep -v bash | awk '{print $2}'";
     if(ppid.isEmpty())
         cmd = "ps -aef | grep " + p_name + " | grep -v grep | grep -v bash | awk '{print $2}'";
     else
@@ -56,6 +55,25 @@ QStringList getSystemProcessID(QProcess *p_bash, const QString &p_name, const QS
 
     return out_str.split("\n");
 }
+
+QStringList getAllChildProcessID(QProcess *p_bash, const QString &ppid) {
+    if(p_bash == nullptr) {
+        auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
+        p_bash = pool.getOneProcess();
+    }
+
+    QString cmd = "ps -aef | awk '$3==" + ppid + " {print $2}'";
+    QStringList arguments;
+    arguments << "-c" << cmd;
+    p_bash->setArguments(arguments);
+    p_bash->start();
+    p_bash->waitForFinished();
+
+    QString out_str;
+    utils::getQProcessStandardOutput(p_bash, out_str, true);
+
+    return out_str.split("\n");
+};
 
 void killSystemProcess(QProcess *p_bash, const QString &p_name, const QString &ppid, int signal) {
     if(p_bash == nullptr) {

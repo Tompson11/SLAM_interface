@@ -1,4 +1,5 @@
 #include "slamwidget.h"
+#include <QParallelAnimationGroup>
 
 SlamWidget::SlamWidget(QWidget *parent, const QColor& unact_color, const QColor& act_color) : LaunchWidget(parent, unact_color, act_color)
 {
@@ -13,9 +14,17 @@ SlamWidget::SlamWidget(QWidget *parent, const QColor& unact_color, const QColor&
     label_topic->setFixedWidth(120);
 
     table_in_dialog = new SlamLaunchTableView(dialog_config);
+    int total_width = 900;
+    table_in_dialog->setColumnWidth(0, 0.15 * total_width);
+    table_in_dialog->setColumnWidth(1, 0.3 * total_width);
+    table_in_dialog->setColumnWidth(2, 0.3 * total_width);
+
     dialog_layout->addWidget(table_in_dialog, 0, 0, 3, 1);
     dialog_config->setTableView(table_in_dialog);
     connect(table_in_dialog, SIGNAL(launchTableUpdate()), this, SLOT(updateLaunchCombo()));
+    connect(combo_launch_items, SIGNAL(currentIndexChanged(int)), this, SLOT(onSlamChanged(int)));
+
+    animation_blink_gourp = new QParallelAnimationGroup(this);
 
 /*
     label_toggle_back->setFixedWidth(100);
@@ -150,9 +159,9 @@ void SlamWidget::saveCurrentConfig(QSettings *settings, const QString &group) {
             settings->setValue("SENSOR_NAME", model->data(model->index(i, 0)).toString());
             settings->setValue("WORKSPACE", model->data(model->index(i, 1)).toString());
             settings->setValue("FILENAME", model->data(model->index(i, 2)).toString());
-            settings->setValue("LIDAR", model->data(model->index(i, 3)).toBool());
-            settings->setValue("CAMERA", model->data(model->index(i, 4)).toBool());
-            settings->setValue("IMU", model->data(model->index(i, 5)).toBool());
+            settings->setValue("LIDAR", model->data(model->index(i, 3), Qt::UserRole).toBool());
+            settings->setValue("CAMERA", model->data(model->index(i, 4), Qt::UserRole).toBool());
+            settings->setValue("IMU", model->data(model->index(i, 5), Qt::UserRole).toBool());
         }
         settings->endArray();
         settings->endGroup();
@@ -161,20 +170,32 @@ void SlamWidget::saveCurrentConfig(QSettings *settings, const QString &group) {
 
 void SlamWidget::loadConfig(QSettings *settings, const QString &group) {
     if(settings) {
-        QList<QStandardItem*> item;
-        item << new QStandardItem("") << new QStandardItem("") << new QStandardItem("")
-             << new QStandardItem("") << new QStandardItem("") << new QStandardItem("");
+        QFont key_font;
 
         settings->beginGroup(group);
         int size = settings->beginReadArray("LAUNCH_FILE");
         for (int i = 0; i < size; ++i) {
+            QList<QStandardItem*> item;
+            item << new QStandardItem("") << new QStandardItem("") << new QStandardItem("")
+                 << new QStandardItem("") << new QStandardItem("") << new QStandardItem("");
+
             settings->setArrayIndex(i);
-            item.at(0)->setData(settings->value("SENSOR_NAME"));
-            item.at(1)->setData(settings->value("WORKSPACE"));
-            item.at(2)->setData(settings->value("FILENAME"));
-            item.at(3)->setData(settings->value("LIDAR"));
-            item.at(4)->setData(settings->value("CAMERA"));
-            item.at(5)->setData(settings->value("IMU"));
+            item.at(0)->setText(settings->value("SENSOR_NAME").toString());
+            item.at(1)->setText(settings->value("WORKSPACE").toString());
+            item.at(2)->setText(settings->value("FILENAME").toString());
+            item.at(3)->setData(settings->value("LIDAR"), Qt::UserRole);
+            item.at(4)->setData(settings->value("CAMERA"), Qt::UserRole);
+            item.at(5)->setData(settings->value("IMU"), Qt::UserRole);
+
+            if(i == 0) {
+                key_font = item.at(0)->font();
+                key_font.setBold(true);
+            }
+
+            item.at(0)->setFont(key_font);
+            item.at(0)->setToolTip(item.at(0)->text());
+            item.at(1)->setToolTip(item.at(1)->text());
+            item.at(2)->setToolTip(item.at(2)->text());
             table_in_dialog->addRow(i, item);
         }
         settings->endArray();
@@ -182,4 +203,34 @@ void SlamWidget::loadConfig(QSettings *settings, const QString &group) {
 
         updateLaunchCombo();
     }
+}
+
+void SlamWidget::setImuWidget(LaunchWidget *wid) {
+    this->imu_widget = wid;
+}
+
+void SlamWidget::setLidarWidget(LaunchWidget *wid) {
+    this->lidar_widget = wid;
+}
+
+void SlamWidget::setCameraWidget(LaunchWidget *wid) {
+    this->camera_widget = wid;
+}
+
+void SlamWidget::onSlamChanged(int index) {
+    auto *model = table_in_dialog->model();
+
+    bool need_lidar = this->lidar_widget != nullptr && model->data(model->index(index, 3), Qt::UserRole).toBool();
+    bool need_camera = this->camera_widget != nullptr && model->data(model->index(index, 4), Qt::UserRole).toBool();
+    bool need_imu = this->imu_widget != nullptr && model->data(model->index(index, 5), Qt::UserRole).toBool();
+
+    if(need_lidar)
+        this->lidar_widget->playWinkAnimation();
+
+    if(need_camera)
+        this->camera_widget->playWinkAnimation();
+
+    if(need_imu)
+        this->imu_widget->playWinkAnimation();
+
 }

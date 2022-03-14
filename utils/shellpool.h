@@ -4,8 +4,12 @@
 #include <QProcess>
 #include <unordered_map>
 #include <mutex>
+#include "sys.h"
 
 namespace utils {
+
+QStringList getAllChildProcessID(QProcess *p_bash, const QString &ppid);
+void killSystemProcess(QProcess *p_bash, const QString &p_name, const QString &ppid, int signal);
 
 enum ShellType{
     SHELL_SH = 0,
@@ -20,6 +24,33 @@ public:
 
 private:
     ShellPool() {};
+    ~ShellPool() {
+//        QProcess *final_process = new QProcess();
+//        switch (T) {
+//        case SHELL_SH:
+//            final_process->setProgram("sh");
+//            break;
+//        case SHELL_ZSH:
+//            final_process->setProgram("zsh");
+//            break;
+//        default:
+//            final_process->setProgram("bash");
+//            break;
+//        }
+
+//        for(auto it = available_process.begin(); it != available_process.end(); it++) {
+//            if(it->first->state() == QProcess::Running)
+//                it->first->terminate();
+
+//            QStringList ret = utils::getAllChildProcessID(final_process, QString::number(it->first->pid()));
+//            for(auto &id: ret) {
+//                utils::killSystemProcess(final_process, id, "", 2);
+//            }
+//        }
+
+//        final_process->terminate();
+//        delete final_process;
+    };
 
     std::unordered_map<QProcess*, bool> available_process;
 
@@ -52,7 +83,7 @@ public:
         }
 
         if(ret_process == nullptr && parent_ptr != nullptr){
-            ret_process = new QProcess(parent_ptr);
+            ret_process = new QProcess();
             ret_process->setProcessEnvironment(QProcessEnvironment::systemEnvironment());
             available_process.emplace(ret_process, false);
 

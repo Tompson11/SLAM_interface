@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent)
         settings = new QSettings("setting.ini", QSettings::IniFormat);
     }
 
-    roscore_widget = new RoscoreWidget(this);
+    roscore_widget = new RoscoreWidget(this, QColor(214, 219, 223), QColor(131, 145, 146));
     roscore_widget->loadConfig(settings, "ROSCORE");
 
     lidar_widget = new SensorWidget(this, SensorWidget::LIDAR, QColor(174, 214, 241), QColor(46, 134, 193));
@@ -33,17 +33,23 @@ MainWindow::MainWindow(QWidget *parent)
     slam_widget = new SlamWidget(this, QColor(241, 148, 138), QColor(203, 67, 53));
     slam_widget->setRoscoreWidget(roscore_widget);
     slam_widget->loadConfig(settings, "SLAM");
+    slam_widget->setLidarWidget(lidar_widget);
+    slam_widget->setCameraWidget(camera_widget);
+    slam_widget->setImuWidget(imu_widget);
 
     if(settings)
         delete settings;
 
+    QHBoxLayout *sensor_layout = new QHBoxLayout();
+    sensor_layout->addWidget(lidar_widget);
+    sensor_layout->addWidget(camera_widget);
+    sensor_layout->addWidget(imu_widget);
+
     QWidget *mainwidget = new QWidget(this);
-    QGridLayout *layout = new QGridLayout(mainwidget);
-    layout->addWidget(roscore_widget, 0, 0, 1, 3);
-    layout->addWidget(lidar_widget, 1, 0, 1, 1, Qt::AlignTop);
-    layout->addWidget(camera_widget, 1, 1, 1, 1, Qt::AlignTop);
-    layout->addWidget(imu_widget, 1, 2, 1, 1, Qt::AlignTop);
-    layout->addWidget(slam_widget, 2, 0, 1, 3, Qt::AlignTop);
+    QVBoxLayout *layout = new QVBoxLayout(mainwidget);
+    layout->addWidget(roscore_widget, Qt::AlignTop);
+    layout->addLayout(sensor_layout, Qt::AlignTop);
+    layout->addWidget(slam_widget,Qt::AlignTop);
     mainwidget->setLayout(layout);
     setCentralWidget(mainwidget);
 }

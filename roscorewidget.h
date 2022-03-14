@@ -13,22 +13,26 @@
 #include <QFileDialog>
 #include <QSettings>
 #include <QPixmap>
+#include "titlewidget.h"
+#include "errorbadgewidget.h"
 #include "components/qtmaterialtextfield.h"
 #include "components/qtmaterialraisedbutton.h"
 #include "components/qtmaterialtoggle.h"
 #include "components/qtmaterialsnackbar.h"
 #include "components/qtmaterialcircularprogress.h"
 
+
 #define ROS_DISTROS_NUM (8)
 
-class RoscoreWidget : public QWidget
+class RoscoreWidget : public TitleWidget
 {
     Q_OBJECT
 public:
-    explicit RoscoreWidget(QWidget *parent = nullptr);
+    explicit RoscoreWidget(QWidget *parent = nullptr, const QColor& unact_color = QColor(255,255,255), const QColor& act_color = QColor(255,255,255));
     bool getSourceROSCmd(QString &cmd);
     void saveCurrentConfig(QSettings *settings, const QString &group);
     void loadConfig(QSettings *settings, const QString &group);
+    bool isRoscoreOpened();
     ~RoscoreWidget();
 
 private:
@@ -44,11 +48,12 @@ private:
     bool setROSBashEnv(QProcess* p);
     void showInfo(const QString &info);
 
+    ErrorBadgeWidget *error_badge;
+
     QtMaterialRaisedButton *button_localhost;
     QtMaterialRaisedButton *button_localip;
     QtMaterialRaisedButton *button_dialog;
 
-    QLabel *label_title;
     QLabel *label_roscore_icon;
     QLabel *label_ros_path;
 
@@ -58,7 +63,6 @@ private:
 
     QFileDialog *dialog_file;
 
-    QtMaterialToggle *toggle_start;
     QtMaterialTextField *text_master_uri;
     QtMaterialSnackbar *snack;
 

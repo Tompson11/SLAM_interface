@@ -26,6 +26,9 @@ public:
     void addRow(int row, QList<QStandardItem*> &items);
     void deleteRow(int row);
     void notifyUpdate();
+    void setColumnWidth(int col, int wid);
+    void setRowHeight(int row, int hei);
+
 
 protected:
     virtual bool isRowIncomplete(int row);

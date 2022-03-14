@@ -13,8 +13,6 @@
 #include <QFileDialog>
 #include <QComboBox>
 #include <QGraphicsDropShadowEffect>
-#include <QPropertyAnimation>
-#include <QSequentialAnimationGroup>
 #include "components/qtmaterialtextfield.h"
 #include "components/qtmaterialraisedbutton.h"
 #include "components/qtmaterialtoggle.h"
@@ -27,48 +25,38 @@
 #include "roscorewidget.h"
 #include "focusincombobox.h"
 #include "launchtableview.h"
+#include "titlewidget.h"
+#include "errorbadgewidget.h"
 #include "utils/sys.h"
 #include "utils/shellpool.h"
 #include "utils/reg.h"
 
-class LaunchWidget : public QWidget
+class LaunchWidget : public TitleWidget
 {
     Q_OBJECT
 
-    Q_PROPERTY(QColor color WRITE setColor READ color)
 public:
     explicit LaunchWidget(QWidget *parent = nullptr, const QColor& unact_color = QColor(255,255,255), const QColor& act_color = QColor(255,255,255));
     void setRoscoreWidget(RoscoreWidget *ptr = nullptr);
-    void playWinkAnimation();
+    QAbstractItemModel* getTableModel();
     virtual void saveCurrentConfig(QSettings *settings, const QString &group) = 0;
     virtual void loadConfig(QSettings *settings, const QString &group) = 0;
 
 protected:
     void constructWidget();
     void constructLayout();
-    void constructAnimation();
     void connectSignal();
 
     void getTopicsOfTheLaunchFile(const QString &workspace_bash, const QString &file);
     void monitorTopicHz(const QString &topic);
     void stopMonitorTopicHz();
 
-    void setColor(const QColor &color);
-    QColor color() const;
-
-    QColor current_color;
-    QColor unactivated_color;
-    QColor activated_color;
+    bool isRoscoreOpened();
 
     // Widget
     QtMaterialCircularProgress *progress_open;
 
-    QLabel *label_title;
-    QLabel *label_title_back;
-
     QLabel *label_main_icon;
-    QtMaterialToggle *toggle_start;
-    QLabel *label_toggle_back;
 
     QLabel *label_launch_items;
     QComboBox *combo_launch_items;
@@ -86,19 +74,9 @@ protected:
     QtMaterialRaisedButton *button_add_in_dialog;
     QtMaterialRaisedButton *button_delete_in_dialog;
 
-    QFrame *title_frame;
-    QFrame *body_frame;
-
-    // layout
-    QGridLayout *title_layout;
-    QGridLayout *body_layout;
-    QVBoxLayout *main_layout;
     QGridLayout *dialog_layout;
 
-    //* animation
-    QPropertyAnimation *animation_activate;
-    QPropertyAnimation *animation_unactivate;
-    QSequentialAnimationGroup *animation_wink;
+    ErrorBadgeWidget *badge;
 
     // others useful
     QProcess *process_launch = nullptr;
@@ -126,6 +104,7 @@ protected slots:
     void updateTopicCombo();
     void updateLaunchCombo();
     void detectRoslaunchResult();
+    void handleRoslaunchError();
 
 };
 

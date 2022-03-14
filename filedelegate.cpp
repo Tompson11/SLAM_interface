@@ -49,10 +49,19 @@ void FileDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, cons
             QMessageBox::critical(line_edit, "Empty Key", "Name should not be empty!");
         }
         else if(!tableview->isKeyReapted(new_data)) {
+            QStandardItemModel *standard_model = static_cast<QStandardItemModel *>(model);
+            QStandardItem *item = standard_model->itemFromIndex(index);
+            item->setToolTip(new_data);
+
             model->setData(index, new_data);
             tableview->addKey(new_data);
             if(!ori_data.isEmpty()) {
                 tableview->deleteKey(ori_data);
+            }
+            else {
+                QFont key_font = item->font();
+                key_font.setBold(true);
+                item->setFont(key_font);
             }
 
             tableview->key_changed = true;
@@ -76,11 +85,15 @@ void FileDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, cons
                     QString filename_ori = model->data(index).toString();
                     model->setData(index, filename_ori);
                     QMessageBox::critical(tableview, "Invalid workspace path", "Please select valid ROS workspace path!");
+                    return;
                 }
             }
             else {
                 model->setData(index, filename[0]);
             }
+
+            QStandardItemModel *standard_model = static_cast<QStandardItemModel *>(model);
+            standard_model->itemFromIndex(index)->setToolTip(filename[0]);
         }
     }
     else{

@@ -1,6 +1,6 @@
 #include "qtmaterialoverlaywidget.h"
 #include <QEvent>
-
+#include <iostream>
 /*!
  *  \class QtMaterialOverlayWidget
  *  \internal
@@ -26,6 +26,7 @@ bool QtMaterialOverlayWidget::event(QEvent *event)
     if (!parent()) {
         return QWidget::event(event);
     }
+
     switch (event->type())
     {
     case QEvent::ParentChange:

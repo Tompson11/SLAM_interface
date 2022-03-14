@@ -6,13 +6,15 @@
 #include <QtSvg/QtSvg>
 #include <QtSvg/QSvgWidget>
 #include <QtSvg/QSvgRenderer>
+#include "clickablebadge.h"
 
-RoscoreWidget::RoscoreWidget(QWidget *parent) : QWidget(parent)
+RoscoreWidget::RoscoreWidget(QWidget *parent, const QColor& unact_color, const QColor& act_color) :
+    TitleWidget(parent, unact_color, act_color)
 {
     this->state = INITIALIZATION;
 
-    label_title = new QLabel(this);
     label_title->setText("ROSCORE");
+    label_toggle_back->setFixedWidth(100);
 
     text_rospath = new QtMaterialTextField(this);
     text_rospath->setLabel("ROS Installment Path");
@@ -30,9 +32,6 @@ RoscoreWidget::RoscoreWidget(QWidget *parent) : QWidget(parent)
                              "image:url(:/icons/icons/slam_interface/svg/home.svg);"
                              "}");
 
-    toggle_start = new QtMaterialToggle(this);
-    toggle_start->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-
     text_master_uri = new QtMaterialTextField(this);
     text_master_uri->setLabel("ROS_MASTER_URI");
 
@@ -42,31 +41,21 @@ RoscoreWidget::RoscoreWidget(QWidget *parent) : QWidget(parent)
     button_localip = new QtMaterialRaisedButton(this);
     button_localip->setText("Use Local IP");
 
-    snack = new QtMaterialSnackbar(this);
-    snack->setFixedHeight(80);
-
     progress_open = new QtMaterialCircularProgress(this);
     progress_open->setVisible(false);
 
-    QGridLayout *layout = new QGridLayout();
-    layout->setHorizontalSpacing(20);
-    layout->addWidget(toggle_start, 0, 0, 1, 1, Qt::AlignCenter);
-    layout->addWidget(label_title, 0, 1, 1, 2, Qt::AlignCenter);
-    layout->addWidget(progress_open, 1, 0, 2, 1, Qt::AlignCenter);
-    layout->addWidget(label_roscore_icon, 1, 0, 2, 1, Qt::AlignCenter);
-    layout->addWidget(text_rospath, 1, 1 ,1, 1);
-    layout->addWidget(button_dialog, 1, 2, 1, 2);
-    layout->addWidget(text_master_uri, 2, 1, 1, 1);
-    layout->addWidget(button_localhost, 2, 2, 1, 1);
-    layout->addWidget(button_localip, 2, 3, 1, 1);
+    error_badge = new ErrorBadgeWidget(this);
+    error_badge->setBadgeParent(label_roscore_icon);
+    error_badge->setBadgeShift(25,25);
 
-    mainframe = new QFrame(this);
-    mainframe->setFrameStyle(QFrame::StyledPanel);
-    mainframe->setLayout(layout);
-    mainframe->setFrameShadow(QFrame::Sunken);
-    QGridLayout *mainlayout = new QGridLayout();
-    mainlayout->addWidget(mainframe);
-    this->setLayout(mainlayout);
+    body_layout->setHorizontalSpacing(20);
+    body_layout->addWidget(progress_open, 0, 0, 2, 1, Qt::AlignCenter);
+    body_layout->addWidget(label_roscore_icon, 0, 0, 2, 1, Qt::AlignCenter);
+    body_layout->addWidget(text_rospath, 0, 1 ,1, 1);
+    body_layout->addWidget(button_dialog, 0, 2, 1, 2);
+    body_layout->addWidget(text_master_uri, 1, 1, 1, 1);
+    body_layout->addWidget(button_localhost, 1, 2, 1, 1);
+    body_layout->addWidget(button_localip, 1, 3, 1, 1);
 
     auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
     process_roscore = pool.getOneProcess();
@@ -114,6 +103,10 @@ void RoscoreWidget::loadConfig(QSettings *settings, const QString &group) {
     }
 }
 
+bool RoscoreWidget::isRoscoreOpened() {
+    return this->state == ROSCORE_OPENED;
+}
+
 void RoscoreWidget::testMasterReachable(const QString &master_hostname, int timeout) {
 //    auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
 //    process_bash = pool.getOneProcess();
@@ -139,6 +132,7 @@ void RoscoreWidget::onToggled(bool tog) {
      if(tog) {
         toggle_start->setEnabled(false);
         progress_open->setVisible(true);
+        animation_activate->start();
 
         text_master_uri->setEnabled(false);
         text_rospath->setEnabled(false);
@@ -269,6 +263,8 @@ void RoscoreWidget::onRoscoreOpenFail(bool reset_toggle, const QString &err_msg)
 
     if(err_msg.length())
         showInfo(err_msg);
+
+    animation_unactivate->start();
 }
 
 void RoscoreWidget::tryOpenRoscore() {
@@ -339,8 +335,7 @@ void RoscoreWidget::detectRosOpen() {
 }
 
 void RoscoreWidget::showInfo(const QString &info) {
-    snack->setToolTipDuration(1000);
-    snack->addInstantMessage(info);
+    QMessageBox::information(this, "", info);
 }
 
 bool RoscoreWidget::validateRosPath(const QString &bash_path, bool pop_error) {
@@ -408,9 +403,9 @@ void RoscoreWidget::handleStandardError() {
     QString out_str;
     utils::getQProcessStandardError(process_roscore, out_str, true);
 
-    std::cout << out_str.toStdString() << std::endl;
-
     if(out_str.length()) {
+        error_badge->appendMsg(out_str);
+
         if(this->state == WAIT_TO_START_ROSCORE) {
             timer_ros_detect.stop();
             timer_rosopen.stop();

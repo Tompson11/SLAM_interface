@@ -33,6 +33,12 @@ SensorWidget::SensorWidget(QWidget *parent, const SensorType &type, const QColor
     label_topic->setFixedWidth(50);
 
     table_in_dialog = new SensorLaunchTableView(dialog_config);
+
+    int total_width = 900;
+    table_in_dialog->setColumnWidth(0, 0.2 * total_width);
+    table_in_dialog->setColumnWidth(1, 0.4 * total_width);
+    table_in_dialog->setColumnWidth(2, 0.4 * total_width);
+
     dialog_layout->addWidget(table_in_dialog, 0, 0, 3, 1);
     dialog_config->setTableView(table_in_dialog);
     connect(table_in_dialog, SIGNAL(launchTableUpdate()), this, SLOT(updateLaunchCombo()));
@@ -108,17 +114,28 @@ void SensorWidget::saveCurrentConfig(QSettings *settings, const QString &group) 
 
 void SensorWidget::loadConfig(QSettings *settings, const QString &group) {
     if(settings) {
-        QList<QStandardItem*> item;
-        item << new QStandardItem("") << new QStandardItem("") << new QStandardItem("");
+        QFont key_font;
 
         settings->beginGroup(group);
         int size = settings->beginReadArray("LAUNCH_FILE");
         for (int i = 0; i < size; ++i) {
+            QList<QStandardItem*> item;
+            item << new QStandardItem("") << new QStandardItem("") << new QStandardItem("");
+
             settings->setArrayIndex(i);
-            std::cout << settings->value("SENSOR_NAME").toString().toStdString() << std::endl;
             item.at(0)->setText(settings->value("SENSOR_NAME").toString());
             item.at(1)->setText(settings->value("WORKSPACE").toString());
             item.at(2)->setText(settings->value("FILENAME").toString());
+
+            if(i == 0) {
+                key_font = item.at(0)->font();
+                key_font.setBold(true);
+            }
+
+            item.at(0)->setFont(key_font);
+            item.at(0)->setToolTip(item.at(0)->text());
+            item.at(1)->setToolTip(item.at(1)->text());
+            item.at(2)->setToolTip(item.at(2)->text());
             table_in_dialog->addRow(i, item);
         }
         settings->endArray();

@@ -165,3 +165,11 @@ bool LaunchTableView::isRowIncomplete(int row) {
 
     return false;
 }
+
+void LaunchTableView::setColumnWidth(int col, int wid) {
+    QTableView::setColumnWidth(col, wid);
+}
+
+void LaunchTableView::setRowHeight(int row, int hei) {
+    QTableView::setRowHeight(row, hei);
+}
