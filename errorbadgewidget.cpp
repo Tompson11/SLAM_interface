@@ -7,6 +7,7 @@ ErrorBadgeWidget::ErrorBadgeWidget(QWidget *parent) : QWidget(parent)
 
     dialog_msg = new QDialog(this);
     dialog_msg->setWindowTitle("Log");
+    dialog_msg->resize(1080,720);
 
     textedit_in_dialog = new QTextEdit(this);
     textedit_in_dialog->setReadOnly(true);

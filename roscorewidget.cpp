@@ -79,9 +79,31 @@ RoscoreWidget::RoscoreWidget(QWidget *parent, const QColor& unact_color, const Q
 }
 
 RoscoreWidget::~RoscoreWidget() {
-    if(process_roscore->state() == QProcess::Running) {
-        process_roscore->kill();
-        process_roscore->waitForFinished();
+//    if(process_roscore->state() == QProcess::Running) {
+//        process_roscore->kill();
+//        process_roscore->waitForFinished();
+//    }
+}
+
+void RoscoreWidget::registerRosProgram(const QString &program) {
+    if(!program.isEmpty()) {
+        register_mutex.lock();
+        std::string p_str = program.toStdString();
+        if(program_set.count(p_str) == 0) {
+            program_set.insert(p_str);
+        }
+        register_mutex.unlock();
+    }
+}
+
+void RoscoreWidget::unregisterRosProgram(const QString &program) {
+    if(!program.isEmpty()) {
+        register_mutex.lock();
+        std::string p_str = program.toStdString();
+        if(program_set.count(p_str) > 0) {
+            program_set.erase(p_str);
+        }
+        register_mutex.unlock();
     }
 }
 
@@ -145,6 +167,25 @@ void RoscoreWidget::onToggled(bool tog) {
      }
      else{
          if(is_master_local) {
+             if(program_set.size() > 0) {
+                 std::string dialog_text;
+                 for(auto &program : program_set) {
+                    dialog_text += "    * " + program + "\n";
+                 }
+
+                int ret = QMessageBox::question(this, "Close Roscore?", "Programs: \n" + QString::fromStdString(dialog_text) + " are still running!\n   Do you want to stop roscore and above programs?");
+                if(ret == QMessageBox::Yes) {
+                    emit localRoscoreClosed();
+                    program_set.clear();
+                }
+                else {
+                    toggle_start->disconnect(SIGNAL(toggled(bool)),this, SLOT(onToggled(bool)));
+                    toggle_start->toggle();
+                    connect(toggle_start, SIGNAL(toggled(bool)),this, SLOT(onToggled(bool)));
+                    return;
+                }
+             }
+
              toggle_start->setEnabled(false);
              progress_open->setVisible(true);
 

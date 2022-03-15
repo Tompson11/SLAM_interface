@@ -95,6 +95,8 @@ void LaunchWidget::connectSignal() {
     connect(&timer_roslaunch_detect, &QTimer::timeout, this, &LaunchWidget::detectRoslaunchResult);
 
     connect(process_launch, &QProcess::readyReadStandardError,this,&LaunchWidget::handleRoslaunchError);
+
+
 }
 
 QAbstractItemModel* LaunchWidget::getTableModel() {
@@ -102,7 +104,26 @@ QAbstractItemModel* LaunchWidget::getTableModel() {
 }
 
 void LaunchWidget::setRoscoreWidget(RoscoreWidget *ptr) {
+    if(roscore_widget != nullptr) {
+        roscore_widget->disconnect(this);
+    }
+
     roscore_widget = ptr;
+
+    if(roscore_widget != nullptr) {
+        connect(roscore_widget, &RoscoreWidget::localRoscoreClosed, this, &LaunchWidget::onRoscoreClosed);
+    }
+}
+
+void LaunchWidget::onRoscoreClosed() {
+    if(toggle_start->isChecked()) {
+        if(process_launch != nullptr && process_launch->state() == QProcess::Running) {
+            utils::killAllChildProcess(nullptr, QString::number(process_launch->pid()));
+        }
+
+        stopMonitorTopicHz();
+        onRoslaunchFail(true, "");
+    }
 }
 
 bool LaunchWidget::isRoscoreOpened() {
@@ -194,7 +215,27 @@ void LaunchWidget::onToggled(bool tog) {
         process_launch->waitForFinished();
 
         onRoslaunchFail(false, "");
+        unregisterFromRoscore();
     }
+}
+
+void LaunchWidget::generateLaunchProgramName() {
+    int row = combo_launch_items->currentIndex();
+    auto *model = table_in_dialog->model();
+    QString time_stamp = QString::number(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+    launch_program_name = model->data(model->index(row, 0)).toString() + "[" + time_stamp +"]";
+}
+
+void LaunchWidget::registerToRoscore() {
+    if(roscore_widget) {
+        generateLaunchProgramName();
+        roscore_widget->registerRosProgram(launch_program_name);
+    }
+}
+
+void LaunchWidget::unregisterFromRoscore() {
+    if(roscore_widget)
+        roscore_widget->unregisterRosProgram(launch_program_name);
 }
 
 void LaunchWidget::onRoslaunchSuccess() {
@@ -208,6 +249,8 @@ void LaunchWidget::onRoslaunchSuccess() {
     auto *model = table_in_dialog->model();
     QString workspace_bash = model->data(model->index(row, 1)).toString() + "/devel/setup.bash";
     QString launch_file = model->data(model->index(row, 2)).toString();
+
+    registerToRoscore();
 
     getTopicsOfTheLaunchFile(workspace_bash, launch_file);
 }

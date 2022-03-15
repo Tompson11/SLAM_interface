@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <mutex>
 #include "sys.h"
-
+#include <iostream>
 namespace utils {
 
 QStringList getAllChildProcessID(QProcess *p_bash, const QString &ppid);
@@ -25,31 +25,33 @@ public:
 private:
     ShellPool() {};
     ~ShellPool() {
-//        QProcess *final_process = new QProcess();
-//        switch (T) {
-//        case SHELL_SH:
-//            final_process->setProgram("sh");
-//            break;
-//        case SHELL_ZSH:
-//            final_process->setProgram("zsh");
-//            break;
-//        default:
-//            final_process->setProgram("bash");
-//            break;
-//        }
+        QProcess *final_process = new QProcess();
+        switch (T) {
+        case SHELL_SH:
+            final_process->setProgram("sh");
+            break;
+        case SHELL_ZSH:
+            final_process->setProgram("zsh");
+            break;
+        default:
+            final_process->setProgram("bash");
+            break;
+        }
 
-//        for(auto it = available_process.begin(); it != available_process.end(); it++) {
-//            if(it->first->state() == QProcess::Running)
-//                it->first->terminate();
+        for(auto it = available_process.begin(); it != available_process.end(); it++) {
+            QProcess *p = it->first;
+            if(p->state() == QProcess::Running) {
+                QStringList ret = utils::getAllChildProcessID(final_process, QString::number(p->pid()));
+                for(auto &id: ret) {
+                    utils::killSystemProcess(final_process, id, "", 2);
+                }
+                p->terminate();
+                p->waitForFinished();
+            }
+        }
 
-//            QStringList ret = utils::getAllChildProcessID(final_process, QString::number(it->first->pid()));
-//            for(auto &id: ret) {
-//                utils::killSystemProcess(final_process, id, "", 2);
-//            }
-//        }
-
-//        final_process->terminate();
-//        delete final_process;
+        final_process->terminate();
+        delete final_process;
     };
 
     std::unordered_map<QProcess*, bool> available_process;

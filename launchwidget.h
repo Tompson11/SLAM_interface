@@ -1,6 +1,7 @@
 #ifndef LAUNCHWIDGET_H
 #define LAUNCHWIDGET_H
 
+#include <chrono>
 #include <QObject>
 #include <QWidget>
 #include <QProcess>
@@ -43,6 +44,9 @@ public:
     virtual void loadConfig(QSettings *settings, const QString &group) = 0;
 
 protected:
+    void registerToRoscore();
+    void unregisterFromRoscore();
+
     void constructWidget();
     void constructLayout();
     void connectSignal();
@@ -52,6 +56,7 @@ protected:
     void stopMonitorTopicHz();
 
     bool isRoscoreOpened();
+    virtual void generateLaunchProgramName();
 
     // Widget
     QtMaterialCircularProgress *progress_open;
@@ -87,7 +92,9 @@ protected:
     QTimer timer_topic;
     QTimer timer_roslaunch_detect;
 
-    RoscoreWidget *roscore_widget;
+    RoscoreWidget *roscore_widget = nullptr;
+
+    QString launch_program_name = "";
 
 signals:
 
@@ -105,6 +112,7 @@ protected slots:
     void updateLaunchCombo();
     void detectRoslaunchResult();
     void handleRoslaunchError();
+    void onRoscoreClosed();
 
 };
 

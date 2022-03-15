@@ -13,6 +13,8 @@
 #include <QFileDialog>
 #include <QSettings>
 #include <QPixmap>
+#include <mutex>
+#include <unordered_set>
 #include "titlewidget.h"
 #include "errorbadgewidget.h"
 #include "components/qtmaterialtextfield.h"
@@ -33,6 +35,8 @@ public:
     void saveCurrentConfig(QSettings *settings, const QString &group);
     void loadConfig(QSettings *settings, const QString &group);
     bool isRoscoreOpened();
+    void registerRosProgram(const QString &program);
+    void unregisterRosProgram(const QString &program);
     ~RoscoreWidget();
 
 private:
@@ -105,7 +109,11 @@ private:
         ROSCORE_OPENED
     } state;
 
+    std::unordered_set<std::string> program_set;
+    std::mutex register_mutex;
+
 signals:
+    void localRoscoreClosed();
 
 private slots:
     void onStarted();

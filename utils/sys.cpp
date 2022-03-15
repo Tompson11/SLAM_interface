@@ -93,5 +93,23 @@ void killSystemProcess(QProcess *p_bash, const QString &p_name, const QString &p
     }
 }
 
+void killAllChildProcess(QProcess *p_bash, const QString &ppid, int signal = SIGINT) {
+    if(p_bash == nullptr) {
+        auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
+        p_bash = pool.getOneProcess();
+    }
+
+    QStringList pids = getAllChildProcessID(p_bash, ppid);
+    for(auto &pid : pids) {
+        std::cout << "kill " << pid.toStdString() << std::endl;
+        QString cmd = "kill -" + QString::number(signal) + " " + pid;
+        QStringList arguments;
+        arguments << "-c" << cmd;
+        p_bash->setArguments(arguments);
+        p_bash->start();
+        p_bash->waitForFinished();
+    }
+}
+
 };
 #endif // SYS_H

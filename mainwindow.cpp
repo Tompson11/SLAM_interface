@@ -63,27 +63,27 @@ MainWindow::~MainWindow()
 void MainWindow::closeEvent(QCloseEvent *event) {
     event->accept();
 
-//    auto ret = QMessageBox::question(this, "Exit", "Whether to close the SlamInterface?",
-//                                     QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+    auto ret = QMessageBox::question(this, "Exit", "Whether to close the SlamInterface?",
+                                     QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
 
-//    if(ret == QMessageBox::Yes)
-//        event->accept();
-//    else
-//        event->ignore();
+    if(ret == QMessageBox::Yes)
+        event->accept();
+    else
+        event->ignore();
 }
 
 void MainWindow::saveCurrentConfig() {
-//    auto ret = QMessageBox::question(this, "Save Config", "Whether to save the current config?");
+    auto ret = QMessageBox::question(this, "Save Config", "Whether to save the current config?");
 
-//    if(ret == QMessageBox::Yes) {
-//        QSettings *settings = new QSettings("setting.ini", QSettings::IniFormat);
+    if(ret == QMessageBox::Yes) {
+        QSettings *settings = new QSettings("setting.ini", QSettings::IniFormat);
 
-//        roscore_widget->saveCurrentConfig(settings, "ROSCORE");
-//        lidar_widget->saveCurrentConfig(settings, "LIDAR");
-//        camera_widget->saveCurrentConfig(settings, "CAMERA");
-//        imu_widget->saveCurrentConfig(settings, "IMU");
-//        slam_widget->saveCurrentConfig(settings, "SLAM");
+        roscore_widget->saveCurrentConfig(settings, "ROSCORE");
+        lidar_widget->saveCurrentConfig(settings, "LIDAR");
+        camera_widget->saveCurrentConfig(settings, "CAMERA");
+        imu_widget->saveCurrentConfig(settings, "IMU");
+        slam_widget->saveCurrentConfig(settings, "SLAM");
 
-//        delete settings;
-//    }
+        delete settings;
+    }
 }

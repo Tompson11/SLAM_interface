@@ -17,6 +17,8 @@ void getQProcessStandardError (QProcess *p, QString &out_str, bool trim = false)
 QStringList getSystemProcessID(QProcess *p_bash, const QString &p_name, const QString &ppid = QString());
 QStringList getAllChildProcessID(QProcess *p_bash, const QString &ppid);
 void killSystemProcess(QProcess *p_bash, const QString &p_name, const QString &ppid = QString(), int signal = SIGINT);
+void killAllChildProcess(QProcess *p_bash, const QString &ppid, int signal = SIGINT);
+
 };
 
 #endif // SYS_H
