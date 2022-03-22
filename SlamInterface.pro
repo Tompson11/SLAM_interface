@@ -25,6 +25,8 @@ SOURCES += \
     components/qtmaterialcircularprogress_internal.cpp \
     components/qtmaterialdialog.cpp \
     components/qtmaterialdialog_internal.cpp \
+    components/qtmaterialdrawer.cpp \
+    components/qtmaterialdrawer_internal.cpp \
     components/qtmaterialfab.cpp \
     components/qtmaterialflatbutton.cpp \
     components/qtmaterialflatbutton_internal.cpp \
@@ -39,6 +41,8 @@ SOURCES += \
     filedelegate.cpp \
     focusincombobox.cpp \
     launchconfigdialog.cpp \
+    launchfilereader.cpp \
+    launchparamdelegate.cpp \
     launchtableview.cpp \
     launchwidget.cpp \
     main.cpp \
@@ -78,6 +82,9 @@ HEADERS += \
     components/qtmaterialdialog.h \
     components/qtmaterialdialog_internal.h \
     components/qtmaterialdialog_p.h \
+    components/qtmaterialdrawer.h \
+    components/qtmaterialdrawer_internal.h \
+    components/qtmaterialdrawer_p.h \
     components/qtmaterialfab.h \
     components/qtmaterialfab_p.h \
     components/qtmaterialflatbutton.h \
@@ -98,6 +105,8 @@ HEADERS += \
     filedelegate.h \
     focusincombobox.h \
     launchconfigdialog.h \
+    launchfilereader.h \
+    launchparamdelegate.h \
     launchtableview.h \
     launchwidget.h \
     mainwindow.h \

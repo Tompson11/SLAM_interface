@@ -14,9 +14,11 @@ public:
 
 signals:
     void focusIn();
+    void rightButtonPressed();
 
 protected:
     virtual void focusInEvent(QFocusEvent *e);
+    virtual void mousePressEvent(QMouseEvent *e);
 };
 
 #endif // FOCUSINCOMBOBOX_H

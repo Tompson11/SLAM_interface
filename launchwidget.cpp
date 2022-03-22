@@ -26,7 +26,7 @@ void LaunchWidget::constructWidget() {
 
     label_launch_items = new QLabel(this);
 
-    combo_launch_items = new QComboBox(this);
+    combo_launch_items = new FocusInComboBox(this);
 
     label_topic =  new QLabel(this);
     label_topic->setText("Topic");
@@ -54,6 +54,13 @@ void LaunchWidget::constructWidget() {
     button_delete_in_dialog = new QtMaterialRaisedButton(dialog_config);
     button_delete_in_dialog->setText("Delete");
 
+    drawer_param = new QtMaterialDrawer();
+    drawer_param->setParent(this->parentWidget());
+    drawer_param->setClickOutsideToClose(true);
+    drawer_param->setOverlayMode(true);
+
+    tree_param = new QTreeView();
+
     auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
     process_launch = pool.getOneProcess();
 }
@@ -75,6 +82,10 @@ void LaunchWidget::constructLayout() {
     dialog_layout->addWidget(button_add_in_dialog, 0, 1, 1, 1);
     dialog_layout->addWidget(button_delete_in_dialog, 1, 1, 1, 1);
     dialog_config->setLayout(dialog_layout);
+
+    drawer_layout = new QGridLayout(drawer_param);
+    drawer_layout->addWidget(tree_param, 0, 0, 1, 2);
+    drawer_param->setDrawerLayout(drawer_layout);
 }
 
 
@@ -88,15 +99,15 @@ void LaunchWidget::connectSignal() {
     connect(checkbox_hz, SIGNAL(toggled(bool)), this, SLOT(onHzChecked(bool)));
 
 
-//    connect(combo_topic, SIGNAL(focusIn()), this, SLOT(updateTopicCombo()));
+    //    connect(combo_topic, SIGNAL(focusIn()), this, SLOT(updateTopicCombo()));
     connect(combo_topic, SIGNAL(currentTextChanged(QString)), this, SLOT(onTopicChanged(QString)));
+    connect(combo_launch_items, SIGNAL(currentTextChanged(QString)), this, SLOT(onLaunchItemChanged(QString)));
+    connect(combo_launch_items, SIGNAL(rightButtonPressed()), this, SLOT(onLaunchComboRightClicked()));
 
     connect(&timer_topic, &QTimer::timeout, this, &LaunchWidget::onHzOutput);
     connect(&timer_roslaunch_detect, &QTimer::timeout, this, &LaunchWidget::detectRoslaunchResult);
 
     connect(process_launch, &QProcess::readyReadStandardError,this,&LaunchWidget::handleRoslaunchError);
-
-
 }
 
 QAbstractItemModel* LaunchWidget::getTableModel() {
@@ -154,6 +165,73 @@ void LaunchWidget::onButtonDeleteClicked() {
     }
 }
 
+void LaunchWidget::getLaunchRemapCmd(QString &cmd, QString launch_file) {
+    auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
+    auto *p = pool.getOneProcess();
+
+    QString arg_override_cmd;
+    QString arg_substitute_cmd;
+    if(changed_arg_set != nullptr && changed_arg_set->empty() == false) {
+        for(auto *item: *changed_arg_set) {
+            QString name = tree_model->data(item->index().siblingAtColumn(1)).toString();
+            QString type = tree_model->data(item->index().siblingAtColumn(2)).toString();
+            QString value = tree_model->data(item->index().siblingAtColumn(3)).toString();
+
+            if(type == "default") {
+                arg_override_cmd += QString(" %1:=%2").arg(name, value);
+            }
+            else {
+                QStringList tmp_arguments;
+                QString tmp_cmd = QString("sed -n '/<arg.*name=\"%1\"/=' %2").arg(name, launch_file);
+                tmp_arguments << "-c" << tmp_cmd;
+                p->setArguments(tmp_arguments);
+                p->start();
+                p->waitForFinished();
+
+                QString line;
+                utils::getQProcessStandardOutput(p, line, true);
+
+                arg_substitute_cmd += QString("| sed '%1 s/value=\".*\"/value=\"%2\"/' ").arg(line, value);
+            }
+        }
+    }
+
+    QString param_substitute_cmd;
+    if(changed_param_set != nullptr && changed_param_set->empty() == false) {
+        QString fake_params;
+        for(auto *item: *changed_param_set) {
+            QString ns = item->parent()->data(Qt::DisplayRole).toString();
+            QString name = tree_model->data(item->index().siblingAtColumn(1)).toString();
+            QString type = tree_model->data(item->index().siblingAtColumn(2)).toString();
+            QString value = tree_model->data(item->index().siblingAtColumn(3)).toString();
+
+            if(type.isEmpty())
+                fake_params += QString("<param name=\"%1\" value=\"%2\" \\>\n").arg(name, value);
+            else
+                fake_params += QString("<param name=\"%1\" type=\"%2\" value=\"%3\" />\n").arg(name, type, value);
+
+        }
+
+        QStringList tmp_arguments;
+        QString tmp_cmd = QString("sed -n '/<\\/launch>/=' %1").arg(launch_file);
+        tmp_arguments << "-c" << tmp_cmd;
+        p->setArguments(tmp_arguments);
+        p->start();
+        p->waitForFinished();
+
+        QString line;
+        utils::getQProcessStandardOutput(p, line, true);
+
+        param_substitute_cmd = QString("| sed '%1 i\%2'").arg(line, fake_params);
+    }
+
+    cmd = "cat " + launch_file;
+    cmd += arg_substitute_cmd;
+    cmd += param_substitute_cmd;
+    cmd += QString("| roslaunch - %1").arg(arg_override_cmd);
+
+}
+
 void LaunchWidget::onToggled(bool tog) {
     if(tog) {
         toggle_start->setEnabled(false);
@@ -166,7 +244,7 @@ void LaunchWidget::onToggled(bool tog) {
             onRoslaunchFail(true, "");
 
             if(roscore_widget != nullptr)
-                 roscore_widget->playWinkAnimation();
+                roscore_widget->playWinkAnimation();
 
             return;
         }
@@ -191,9 +269,20 @@ void LaunchWidget::onToggled(bool tog) {
         QString cmd;
         if(roscore_widget->getSourceROSCmd(cmd)) {
             QString launch_file = model->data(model->index(row, 2)).toString();
+            if(!utils::existDir(launch_file)) {
+                QMessageBox::critical(this, "non-existent launch file", launch_file + " is non-existent, please modify it first!");
+                onRoslaunchFail(true, "");
+                return;
+            }
+
             QStringList arguments;
+
+            QString tmp_cmd;
+            getLaunchRemapCmd(tmp_cmd, launch_file);
+
             cmd += "source " + workspace_bash + ";";
-            cmd += "roslaunch " + launch_file + ";";
+            cmd += tmp_cmd;
+
             arguments << "-c" << cmd;
             process_launch->setArguments(arguments);
             process_launch->start();
@@ -289,6 +378,34 @@ void LaunchWidget::updateLaunchCombo() {
     combo_launch_items->addItems(all_sensors);
 }
 
+void LaunchWidget::onLaunchItemChanged(const QString &text) {
+    if(text.isEmpty()) {
+        tree_model = nullptr;
+        changed_param_set = nullptr;
+        changed_arg_set = nullptr;
+        setLaunchItemColor();
+        return;
+    }
+
+    int row = combo_launch_items->currentIndex();
+    auto *model = table_in_dialog->model();
+    QString launch_file = model->data(model->index(row, 2)).toString();
+
+    if(launch_file_map.count(launch_file.toStdString()) == 0) {
+        tree_model = nullptr;
+        changed_param_set = nullptr;
+        changed_arg_set = nullptr;
+    }
+    else {
+        auto &p = launch_file_map.at(launch_file.toStdString());
+        tree_model = static_cast<QStandardItemModel*>(p.first);
+        changed_param_set = p.second;
+        changed_arg_set = p.second + 1;
+    }
+    setLaunchItemColor();
+
+}
+
 void LaunchWidget::onTopicChanged(const QString &text) {
     if(text.isEmpty() || cur_monitored_topic == text)
         return;
@@ -297,6 +414,84 @@ void LaunchWidget::onTopicChanged(const QString &text) {
         stopMonitorTopicHz();
         monitorTopicHz(text);
     }
+}
+
+void LaunchWidget::onLaunchParamChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles) {
+    if(bottomRight.column() < 3)
+        return;
+
+    for(int row = topLeft.row() ; row <= bottomRight.row(); row++) {
+        auto *item = tree_model->itemFromIndex(topLeft.sibling(row, 3));
+        item->setToolTip(item->data(Qt::DisplayRole).toString());
+
+        auto *arg_header_item = tree_model->item(0);
+        auto *param_header_item = tree_model->item(1);
+
+        if(item->data(Qt::UserRole) != item->data(Qt::DisplayRole)) {
+            item->setForeground(QBrush(QColor(255, 0, 0)));
+
+            if(item->parent() == arg_header_item)
+                changed_arg_set->emplace(item);
+            else if(item->parent()->parent() == param_header_item)
+                changed_param_set->emplace(item);
+
+            setLaunchItemColor();
+        }
+        else {
+            item->setForeground(QBrush(QColor(0, 0, 0)));
+
+            if(item->parent() == arg_header_item)
+                changed_arg_set->erase(item);
+            else if(item->parent() != nullptr && item->parent()->parent() == param_header_item)
+                changed_param_set->erase(item);
+
+            setLaunchItemColor();
+        }
+    }
+}
+
+void LaunchWidget::onLaunchComboRightClicked() {
+    int row = combo_launch_items->currentIndex();
+    auto *model = table_in_dialog->model();
+    QString launch_file = model->data(model->index(row, 2)).toString();
+
+    if(!utils::existDir(launch_file))
+        return;
+
+    if(launch_file_map.count(launch_file.toStdString()) == 0) {
+
+        tree_model = new QStandardItemModel();
+        tree_model->setHorizontalHeaderLabels(QStringList()<<QStringLiteral("Namespace")<<QStringLiteral("Parameter") << QStringLiteral("Type") << QStringLiteral("Value") << QStringLiteral(""));
+
+        LaunchParamDelegate *delegate = new LaunchParamDelegate(this, tree_model);
+        tree_param->setItemDelegate(delegate);
+
+        LaunchFileReader reader(launch_file, tree_model);
+        QString err_msg;
+        if(reader.readAndBuildModel(err_msg)) {
+            std::unordered_set<QStandardItem*> *set_array = new std::unordered_set<QStandardItem*>[2];
+            changed_param_set = &set_array[0];
+            changed_arg_set = &set_array[1];
+            launch_file_map.emplace(launch_file.toStdString(), LaunchParamInfo(tree_model, set_array));
+            connect(tree_model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)), this, SLOT(onLaunchParamChanged(QModelIndex,QModelIndex,QVector<int>)));
+        }
+        else {
+            delete tree_model;
+            tree_model = nullptr;
+            changed_param_set = nullptr;
+            changed_arg_set = nullptr;
+            return;
+        }
+    }
+
+    tree_param->setModel(tree_model);
+    tree_param->setColumnWidth(0, 100);
+    tree_param->setColumnWidth(1, 200);
+    tree_param->setColumnWidth(2, 100);
+    tree_param->setColumnWidth(3, 100);
+    tree_param->setColumnWidth(4, 50);
+
+    drawer_param->openDrawer();
 }
 
 void LaunchWidget::onHzChecked(bool tog) {
@@ -451,4 +646,11 @@ void LaunchWidget::updateTopicCombo() {
     pool.returnOneProcess(p);
 }
 
+void LaunchWidget::setLaunchItemColor() {
+    if( (changed_param_set == nullptr || changed_param_set->empty()) && (changed_arg_set == nullptr || changed_arg_set->empty()))
+        label_launch_items->setStyleSheet("color: #000000;");
+    else
+        label_launch_items->setStyleSheet("color: #FF0000;");
+
+}
 

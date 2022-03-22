@@ -18,13 +18,25 @@ QWidget* FileDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem 
         QFileDialog *dialog_dir = new QFileDialog(parent);
         dialog_dir->setWindowTitle("Choose Workspace Directory");
         dialog_dir->setFileMode( QFileDialog::DirectoryOnly );
+
+        auto *model = tableview->model();
+        QString ori_dir = model->data(index).toString();
+        if(!ori_dir.isEmpty())
+            dialog_dir->setDirectory(ori_dir);
+
         return dialog_dir;
     }
     else if(index.column() == 2){
         QFileDialog *dialog_file = new QFileDialog(parent);
         auto *model = tableview->model();
         QString target_dir = model->data(model->index(index.row(), index.column() - 1)).toString();
-        dialog_file->setDirectory(target_dir);
+        QString ori_file = model->data(index).toString();
+
+        if(ori_file.isEmpty())
+            dialog_file->setDirectory(target_dir);
+        else
+            dialog_file->setDirectory(ori_file.left(ori_file.lastIndexOf("/")));
+
         dialog_file->setNameFilter("*.launch");
         dialog_file->setWindowTitle("Choose Launch File");
         dialog_file->setFileMode( QFileDialog::ExistingFile );
@@ -132,6 +144,7 @@ void FileDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, 
                                             0,
                                             0);
         QApplication::style()->drawControl(QStyle::CE_CheckBox,&check_box_style_option,painter);
+
     }
 }
 

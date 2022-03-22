@@ -13,6 +13,7 @@
 #include <QTimer>
 #include <QFileDialog>
 #include <QComboBox>
+#include <QTreeView>
 #include <QGraphicsDropShadowEffect>
 #include "components/qtmaterialtextfield.h"
 #include "components/qtmaterialraisedbutton.h"
@@ -22,12 +23,15 @@
 #include "components/qtmaterialcircularprogress.h"
 #include "components/qtmaterialdialog.h"
 #include "components/qtmaterialcheckbox.h"
+#include "components/qtmaterialdrawer.h"
 #include "launchconfigdialog.h"
 #include "roscorewidget.h"
 #include "focusincombobox.h"
 #include "launchtableview.h"
 #include "titlewidget.h"
 #include "errorbadgewidget.h"
+#include "launchfilereader.h"
+#include "launchparamdelegate.h"
 #include "utils/sys.h"
 #include "utils/shellpool.h"
 #include "utils/reg.h"
@@ -55,6 +59,9 @@ protected:
     void monitorTopicHz(const QString &topic);
     void stopMonitorTopicHz();
 
+    void setLaunchItemColor();
+    void getLaunchRemapCmd(QString &cmd, QString launch_file);
+
     bool isRoscoreOpened();
     virtual void generateLaunchProgramName();
 
@@ -64,7 +71,7 @@ protected:
     QLabel *label_main_icon;
 
     QLabel *label_launch_items;
-    QComboBox *combo_launch_items;
+    FocusInComboBox *combo_launch_items;
 
     QLabel *label_topic;
     FocusInComboBox *combo_topic;
@@ -79,6 +86,17 @@ protected:
     QtMaterialRaisedButton *button_add_in_dialog;
     QtMaterialRaisedButton *button_delete_in_dialog;
 
+    QtMaterialDrawer *drawer_param;
+    QTreeView *tree_param;
+    QStandardItemModel *tree_model = nullptr;
+    std::unordered_set<QStandardItem*> *changed_param_set = nullptr;
+    std::unordered_set<QStandardItem*> *changed_arg_set = nullptr;
+
+    typedef std::pair<QAbstractItemModel*, std::unordered_set<QStandardItem*>*> LaunchParamInfo;
+    std::unordered_map<std::string, LaunchParamInfo> launch_file_map;
+
+    // layout
+    QGridLayout *drawer_layout;
     QGridLayout *dialog_layout;
 
     ErrorBadgeWidget *badge;
@@ -105,6 +123,8 @@ protected slots:
     void onButtonConfigureClicked();
     void onHzChecked(bool tog);
     void onTopicChanged(const QString &text);
+    void onLaunchItemChanged(const QString &text);
+    void onLaunchComboRightClicked();
     void onHzOutput();
     void onRoslaunchSuccess();
     void onRoslaunchFail(bool reset_toggle, const QString &err_msg);
@@ -113,6 +133,7 @@ protected slots:
     void detectRoslaunchResult();
     void handleRoslaunchError();
     void onRoscoreClosed();
+    void onLaunchParamChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int> ());
 
 };
 

@@ -5,11 +5,11 @@ TitleWidget::TitleWidget(QWidget *parent, const QColor& unact_color, const QColo
 {
     label_title = new QLabel(this);
     label_title_back = new QLabel(this);
+    label_title_back->setMinimumHeight(48);
 
     toggle_start = new QtMaterialToggle(this);
 
     label_toggle_back = new QLabel(this);
-    label_toggle_back->setMinimumHeight(50);
 
     title_layout = new QGridLayout();
     title_layout->addWidget(label_toggle_back, 0, 0, 1, 1);
@@ -17,6 +17,7 @@ TitleWidget::TitleWidget(QWidget *parent, const QColor& unact_color, const QColo
     title_layout->addWidget(label_title_back, 0, 1, 1, 1);
     title_layout->addWidget(label_title, 0, 1, 1, 1, Qt::AlignCenter);
     title_layout->setSpacing(0);
+    title_layout->setMargin(0);
 
     title_frame = new QFrame(this);
     title_frame->setLayout(title_layout);
