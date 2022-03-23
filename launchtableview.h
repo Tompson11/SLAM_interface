@@ -7,6 +7,8 @@
 #include <QItemSelectionModel>
 #include "filedelegate.h"
 #include <unordered_set>
+#include <iostream>
+#include "utils/sys.h"
 
 class LaunchTableView: public QTableView
 {
@@ -29,6 +31,8 @@ public:
     void setColumnWidth(int col, int wid);
     void setRowHeight(int row, int hei);
 
+    void keyPressEvent( QKeyEvent* event);
+    bool isDataValid(const QModelIndex &index,const QVariant &data, QString &err_msg);
 
 protected:
     virtual bool isRowIncomplete(int row);

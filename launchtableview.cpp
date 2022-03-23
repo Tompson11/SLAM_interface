@@ -11,6 +11,7 @@ LaunchTableView::LaunchTableView(QWidget *parent) : QTableView(parent)
     this->setSelectionMode(QAbstractItemView::SingleSelection);
     this->setSelectionBehavior(QAbstractItemView::SelectItems);
     this->setItemDelegate(new FileDelegate(this, this));
+    this->setFocusPolicy(Qt::StrongFocus);
 
     connect(model_, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)), this, SLOT(onDataChanged(QModelIndex,QModelIndex,QVector<int>)));
 }
@@ -121,6 +122,21 @@ void LaunchTableView::onDataChanged(const QModelIndex &topLeft, const QModelInde
                 deleteIncompleteRow(row, false, it);
             }
         }
+
+        for(int col = topLeft.column(); col <= bottomRight.column(); col++) {
+            QStandardItem *item = model_->itemFromIndex(model_->index(row, col));
+            QString data = item->data(Qt::DisplayRole).toString();
+
+            if(!data.isEmpty())
+                item->setToolTip(data);
+
+            if(col == 0 && item->font().bold() == false) {
+                auto font = item->font();
+                font.setBold(true);
+                item->setFont(font);
+            }
+        }
+
     }
 }
 
@@ -172,4 +188,92 @@ void LaunchTableView::setColumnWidth(int col, int wid) {
 
 void LaunchTableView::setRowHeight(int row, int hei) {
     QTableView::setRowHeight(row, hei);
+}
+
+bool LaunchTableView::isDataValid(const QModelIndex &index, const QVariant &data, QString &err_msg) {
+    if(index.column() == 0) {
+        QString key = data.toString().trimmed();
+
+        if(key.isEmpty()) {
+            err_msg = "Empty key!";
+            return false;
+        }
+        else if(isKeyReapted(key)) {
+            err_msg = "Reapted key!";
+            return false;
+        }
+        else {
+            return true;
+        }
+    }
+    else if(index.column() == 1) {
+        QUrl workspace{data.toString().trimmed()};
+        if(workspace.isValid() == false) {
+            err_msg = "Invalid directory format!";
+            return false;
+        }
+
+        if(utils::existDir(workspace.toString() + "/devel/setup.bash")) {
+            QUrl launch_file{model_->data(index.siblingAtColumn(2)).toString()};
+            if(!launch_file.isEmpty() && !workspace.isParentOf(launch_file)) {
+                err_msg = "Launch file is not located in the workspace!";
+                return false;
+            }
+
+            return true;
+        }
+        else {
+            err_msg = "Invalid ros workspace!";
+            return false;
+        }
+    }
+    else if(index.column() == 2) {
+        QUrl launch_file{data.toString().trimmed()};
+        if(launch_file.isValid() == false || !launch_file.fileName().endsWith(".launch")) {
+            err_msg = "Invalid launch file format!";
+            return false;
+        }
+
+        if(utils::existDir(launch_file.toString())) {
+            QUrl workspace{model_->data(index.siblingAtColumn(1)).toString()};
+            if(!workspace.isEmpty() && !workspace.isParentOf(launch_file)) {
+                err_msg = "Launch file is not located in the previous workspace!";
+                return false;
+            }
+
+            return true;
+        }
+        else {
+            err_msg = "Non-existent launch file!";
+            return false;
+        }
+    }
+
+    return false;
+}
+
+
+void LaunchTableView::keyPressEvent( QKeyEvent* event) {
+    if(event->type() == QEvent::KeyPress) {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+        if (keyEvent->matches(QKeySequence::Copy)){
+           if (this->selectedIndexes().size() > 0) {
+               auto index = this->selectedIndexes().front();
+               QString text_to_copy = model_->data(index).toString();
+               QApplication::clipboard()->setText(text_to_copy);
+           }
+        }
+        else if(keyEvent->matches(QKeySequence::Paste)) {
+           if (this->selectedIndexes().size() > 0) {
+               auto index = this->selectedIndexes().front();
+               QString text_to_paste = QApplication::clipboard()->text();
+
+               QString err_msg;
+               if(isDataValid(index, text_to_paste, err_msg))
+                   model_->setData(index, text_to_paste);
+               else
+                   QMessageBox::critical(this, "Paste Error", QString("Paste content <font><b>[%1]</b> fail!<br> * %2</font>").arg(text_to_paste, err_msg));
+           }
+        }
+    }
 }

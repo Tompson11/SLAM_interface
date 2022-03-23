@@ -484,7 +484,7 @@ void RoscoreWidget::handleROSOpenError(){
         process_ros_detect->terminate();
         process_ros_detect->waitForFinished();
         utils::ShellPool<utils::SHELL_BASH>::getInstance().returnOneProcess(process_ros_detect);
-        out = "no!";
+        out = "Fail to open roscore! Please check the ROS_MASTER_URI!";
     }
 
     onRoscoreOpenFail(true, out);

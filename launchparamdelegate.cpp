@@ -69,8 +69,8 @@ void LaunchParamDelegate::paint(QPainter *painter, const QStyleOptionViewItem &o
         check_box_style_option.text = "reset";
 
         QApplication::style()->drawControl(QStyle::CE_PushButton,&check_box_style_option, painter);
-
     }
+
 }
 
 bool LaunchParamDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index)

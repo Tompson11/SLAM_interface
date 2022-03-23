@@ -64,7 +64,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
     event->accept();
 
     auto ret = QMessageBox::question(this, "Exit", "Whether to close the SlamInterface?",
-                                     QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+                                     QMessageBox::Yes | QMessageBox::No);
 
     if(ret == QMessageBox::Yes)
         event->accept();

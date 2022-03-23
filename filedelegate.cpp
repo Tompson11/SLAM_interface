@@ -51,11 +51,25 @@ QWidget* FileDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem 
 }
 
 void FileDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const {
+    QString err_msg;
     if(index.column() == 0) {
         QLineEdit *line_edit = static_cast<QLineEdit *>(editor);
         QString ori_data = model->data(index).toString();
         QString new_data = line_edit->text().trimmed();
 
+        if(tableview->isDataValid(index, new_data, err_msg)) {
+            model->setData(index, new_data);
+            tableview->addKey(new_data);
+            if(!ori_data.isEmpty()) {
+                tableview->deleteKey(ori_data);
+            }
+        }
+        else {
+            QMessageBox::critical(line_edit, "Invalid Data", err_msg);
+            model->setData(index, ori_data);
+        }
+
+        /*
         if(new_data.isEmpty()) {
             model->setData(index, ori_data);
             QMessageBox::critical(line_edit, "Empty Key", "Name should not be empty!");
@@ -78,10 +92,11 @@ void FileDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, cons
 
             tableview->key_changed = true;
         }
-        else {
+        else if(new_data != ori_data){
             model->setData(index, ori_data);
             QMessageBox::critical(tableview, "Repeated Key", "Name should be unique!");
         }
+        */
     }
     else if(index.column() < 3)
     {
@@ -89,23 +104,14 @@ void FileDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, cons
         if(dialog->result() == QDialog::Accepted) {
             QStringList filename = dialog->selectedFiles();
 
-            if(index.column() == 1) {
-                if(utils::existDir(filename[0] + "/devel/setup.bash")) {
-                    model->setData(index, filename[0]);
-                }
-                else {
-                    QString filename_ori = model->data(index).toString();
-                    model->setData(index, filename_ori);
-                    QMessageBox::critical(tableview, "Invalid workspace path", "Please select valid ROS workspace path!");
-                    return;
-                }
-            }
-            else {
+            if(tableview->isDataValid(index, filename[0], err_msg)) {
                 model->setData(index, filename[0]);
             }
-
-            QStandardItemModel *standard_model = static_cast<QStandardItemModel *>(model);
-            standard_model->itemFromIndex(index)->setToolTip(filename[0]);
+            else {
+                QString filename_ori = model->data(index).toString();
+                model->setData(index, filename_ori);
+                QMessageBox::critical(tableview, "Invalid Data", err_msg);
+            }
         }
     }
     else{
@@ -163,6 +169,7 @@ bool FileDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const Q
             model->setData(index, !data, Qt::UserRole);
         }
     }
+
 
     return QStyledItemDelegate::editorEvent(event, model, option, index);
 }

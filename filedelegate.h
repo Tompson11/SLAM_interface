@@ -11,7 +11,8 @@
 #include <QStyledItemDelegate>
 #include <QApplication>
 #include <QMouseEvent>
-
+#include <QClipboard>
+#include <iostream>
 class LaunchTableView;
 
 class FileDelegate: public QStyledItemDelegate
@@ -23,6 +24,7 @@ public:
     void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
     bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index);
+
 private:
     LaunchTableView *tableview;
 };

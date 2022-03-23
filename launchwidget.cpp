@@ -350,6 +350,7 @@ void LaunchWidget::onRoslaunchFail(bool reset_toggle, const QString &err_msg) {
     checkbox_hz->setEnabled(false);
     combo_launch_items->setEnabled(true);
     combo_topic->setEnabled(false);
+    combo_topic->clear();
     label_hz->setText("");
 
     if(reset_toggle) {
@@ -407,6 +408,8 @@ void LaunchWidget::onLaunchItemChanged(const QString &text) {
 }
 
 void LaunchWidget::onTopicChanged(const QString &text) {
+    combo_topic->setToolTip(text);
+
     if(text.isEmpty() || cur_monitored_topic == text)
         return;
 
@@ -496,15 +499,11 @@ void LaunchWidget::onLaunchComboRightClicked() {
 
 void LaunchWidget::onHzChecked(bool tog) {
     if(tog) {
-        combo_topic->setEnabled(true);
-
         if(!combo_topic->currentText().isEmpty()) {
             monitorTopicHz(combo_topic->currentText());
         }
     }
     else {
-        combo_topic->setEnabled(false);
-
         stopMonitorTopicHz();
     }
 }
@@ -647,7 +646,7 @@ void LaunchWidget::updateTopicCombo() {
 }
 
 void LaunchWidget::setLaunchItemColor() {
-    if( (changed_param_set == nullptr || changed_param_set->empty()) && (changed_arg_set == nullptr || changed_arg_set->empty()))
+    if((changed_param_set == nullptr || changed_param_set->empty()) && (changed_arg_set == nullptr || changed_arg_set->empty()))
         label_launch_items->setStyleSheet("color: #000000;");
     else
         label_launch_items->setStyleSheet("color: #FF0000;");
