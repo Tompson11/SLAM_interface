@@ -12,6 +12,8 @@ namespace utils {
 
 bool existDir(const std::string &dir);
 bool existDir(const QString &dir);
+bool makeDir(const std::string &dir);
+bool makeDir(const QString &dir);
 void getQProcessStandardOutput (QProcess *p, QString &out_str, bool trim = false);
 void getQProcessStandardError (QProcess *p, QString &out_str, bool trim = false);
 QStringList getSystemProcessID(QProcess *p_bash, const QString &p_name, const QString &ppid = QString());

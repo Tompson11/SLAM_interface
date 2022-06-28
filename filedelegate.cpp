@@ -63,6 +63,8 @@ void FileDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, cons
             if(!ori_data.isEmpty()) {
                 tableview->deleteKey(ori_data);
             }
+
+            tableview->key_changed = true;
         }
         else {
             QMessageBox::critical(line_edit, "Invalid Data", err_msg);

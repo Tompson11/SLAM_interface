@@ -42,14 +42,20 @@ class LaunchWidget : public TitleWidget
 
 public:
     explicit LaunchWidget(QWidget *parent = nullptr, const QColor& unact_color = QColor(255,255,255), const QColor& act_color = QColor(255,255,255));
+    ~LaunchWidget();
+
+    bool isLaunchProgramRunning();
+
     void setRoscoreWidget(RoscoreWidget *ptr = nullptr);
     QAbstractItemModel* getTableModel();
-    virtual void saveCurrentConfig(QSettings *settings, const QString &group) = 0;
-    virtual void loadConfig(QSettings *settings, const QString &group) = 0;
+    virtual void saveCurrentConfig(QSettings *settings, const QString &group, int index = 0) = 0;
+    virtual void loadConfig(QSettings *settings, const QString &group, int index = 0) = 0;
 
 protected:
     void registerToRoscore();
     void unregisterFromRoscore();
+
+    void killRoslaunchProgram();
 
     void constructWidget();
     void constructLayout();
@@ -117,6 +123,7 @@ protected:
 signals:
 
 protected slots:
+    virtual void onButtonRemoveClicked();
     void onToggled(bool tog);
     void onButtonAddClicked();
     void onButtonDeleteClicked();

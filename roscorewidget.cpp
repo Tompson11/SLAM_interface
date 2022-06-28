@@ -8,8 +8,8 @@
 #include <QtSvg/QSvgRenderer>
 #include "clickablebadge.h"
 
-RoscoreWidget::RoscoreWidget(QWidget *parent, const QColor& unact_color, const QColor& act_color) :
-    TitleWidget(parent, unact_color, act_color)
+RoscoreWidget::RoscoreWidget(QWidget *parent) :
+    TitleWidget(parent, QColor(214, 219, 223), QColor(131, 145, 146))
 {
     this->state = INITIALIZATION;
 

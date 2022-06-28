@@ -6,6 +6,8 @@
 #include <string>
 #include <signal.h>
 #include <iostream>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 namespace utils {
 bool existDir(const std::string &dir) {
@@ -15,6 +17,14 @@ bool existDir(const std::string &dir) {
 bool existDir(const QString &dir) {
     return existDir(dir.toStdString());
 };
+
+bool makeDir(const std::string &dir) {
+    return mkdir(dir.c_str(), S_IRUSR | S_IWUSR | S_IXUSR) >= 0;
+}
+
+bool makeDir(const QString &dir) {
+    return makeDir(dir.toStdString());
+}
 
 void getQProcessStandardOutput (QProcess *p, QString &out_str, bool trim = false) {
     if(p) {

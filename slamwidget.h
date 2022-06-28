@@ -2,20 +2,26 @@
 #define SLAMWIDGET_H
 
 #include "launchwidget.h"
+#include "sensorwidget.h"
 #include "slamlaunchtableview.h"
+
+const QString DefaultSlamName = "SLAM";
 
 class SlamWidget : public LaunchWidget
 {
     Q_OBJECT
 public:
-    explicit SlamWidget(QWidget *parent = nullptr, const QColor& unact_color = QColor(255,255,255), const QColor& act_color = QColor(255,255,255));
-    virtual void saveCurrentConfig(QSettings *settings, const QString &group);
-    virtual void loadConfig(QSettings *settings, const QString &group);
+    explicit SlamWidget(QWidget *parent = nullptr);
+    virtual void saveCurrentConfig(QSettings *settings, const QString &group, int index);
+    virtual void loadConfig(QSettings *settings, const QString &group, int index);
     void setImuWidget(LaunchWidget *wid);
     void setLidarWidget(LaunchWidget *wid);
     void setCameraWidget(LaunchWidget *wid);
+    void setSensorWidgetArray(std::vector<std::unordered_set<SensorWidget*>> *wid_array);
 
 private:
+    std::vector<std::unordered_set<SensorWidget*>> *sensor_widget_array = nullptr;
+
     LaunchWidget *imu_widget = nullptr;
     LaunchWidget *lidar_widget = nullptr;
     LaunchWidget *camera_widget = nullptr;

@@ -40,6 +40,7 @@ SOURCES += \
     errorbadgewidget.cpp \
     filedelegate.cpp \
     focusincombobox.cpp \
+    grouplaunchwidget.cpp \
     launchconfigdialog.cpp \
     launchfilereader.cpp \
     launchparamdelegate.cpp \
@@ -48,6 +49,7 @@ SOURCES += \
     main.cpp \
     mainwindow.cpp \
     roscorewidget.cpp \
+    sensorgrouplaunchwidget.cpp \
     sensorlaunchtableview.cpp \
     sensorwidget.cpp \
     slamlaunchtableview.cpp \
@@ -104,6 +106,7 @@ HEADERS += \
     errorbadgewidget.h \
     filedelegate.h \
     focusincombobox.h \
+    grouplaunchwidget.h \
     launchconfigdialog.h \
     launchfilereader.h \
     launchparamdelegate.h \
@@ -111,6 +114,7 @@ HEADERS += \
     launchwidget.h \
     mainwindow.h \
     roscorewidget.h \
+    sensorgrouplaunchwidget.h \
     sensorlaunchtableview.h \
     sensorwidget.h \
     slamlaunchtableview.h \

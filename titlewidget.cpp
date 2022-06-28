@@ -3,7 +3,17 @@
 TitleWidget::TitleWidget(QWidget *parent, const QColor& unact_color, const QColor& act_color) :
     QWidget(parent), unactivated_color(unact_color), activated_color(act_color)
 {
-    label_title = new QLabel(this);
+    label_title = new QLineEdit(this);
+    label_title->setAlignment(Qt::AlignCenter);
+    label_title->setStyleSheet("background:transparent;border-width:0;border-style:outset;"
+                               "font-size: 20px;"
+                               "font-weight: bold;"
+                               );
+//    QFont default_font = label_title->font();
+//    default_font.setBold(true);
+//    default_font.set
+//    label_title->setFont()
+
     label_title_back = new QLabel(this);
     label_title_back->setMinimumHeight(48);
 
@@ -76,6 +86,12 @@ TitleWidget::TitleWidget(QWidget *parent, const QColor& unact_color, const QColo
     animation_wink_backward->addAnimation(animation_unactivate_backward);
     animation_wink_backward->addAnimation(animation_activate_backward);
 
+    timer_disappear.setInterval(10);
+    connect(&timer_disappear, &QTimer::timeout, this, &TitleWidget::playDisappearAnimation);
+
+    timer_appear.setInterval(10);
+    connect(&timer_appear, &QTimer::timeout, this, &TitleWidget::playAppearAnimation);
+
     this->setColor(unact_color);
 }
 
@@ -103,4 +119,77 @@ void TitleWidget::playWinkAnimation() {
     else {
         animation_wink_forward->start();
     }
+}
+
+void TitleWidget::prepareDisappearAnimation(int frame_num) {
+    disappear_step = this->width() / frame_num;
+    disappear_animation_ready = true;
+    timer_disappear.start();
+}
+
+void TitleWidget::prepareAppearAnimation(int frame_num) {
+    appear_target_width = this->width();
+    this->setFixedSize(0, this->height());
+    appear_step = appear_target_width / frame_num;
+    appear_animation_ready = true;
+    timer_appear.start();
+}
+
+void TitleWidget::playDisappearAnimation() {
+    if(disappear_animation_ready == false)
+        return;
+
+    int cur_width = this->width();
+    int new_width = cur_width - disappear_step;
+    if(new_width < 0)
+        new_width = 0;
+
+    this->setFixedWidth(new_width);
+    if(new_width == 0) {
+        disappear_animation_ready = false;
+        timer_disappear.stop();
+        emit titleWidgetRemove(this);
+    }
+}
+
+void TitleWidget::playAppearAnimation() {
+    if(appear_animation_ready == false)
+        return;
+
+    int cur_width = this->width();
+    int new_width = cur_width + appear_step;
+    if(new_width > appear_target_width)
+        new_width = appear_target_width;
+
+    this->setFixedWidth(new_width);
+    if(new_width == appear_target_width) {
+        appear_animation_ready = false;
+        timer_appear.stop();
+    }
+}
+
+void TitleWidget::setRemoveable(bool on) {
+    removeable = on;
+    if(removeable) {
+        if(button_remove == nullptr) {
+            button_remove = new QtMaterialRaisedButton(this);
+            button_remove->setText("x");
+            title_layout->addWidget(button_remove, 0, 1, 1, 1, Qt::AlignRight | Qt::AlignTop);
+            connect(button_remove, &QtMaterialRaisedButton::clicked, this, &TitleWidget::onButtonRemoveClicked);
+        }
+        else {
+            button_remove->show();
+        }
+    }
+    else if(button_remove){
+        button_remove->hide();
+    }
+}
+
+void TitleWidget::onButtonRemoveClicked() {
+    emit titleWidgetRemove(this);
+}
+
+void TitleWidget::notifyCreate() {
+    emit titleWidgetCreate(this);
 }

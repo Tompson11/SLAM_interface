@@ -1,15 +1,15 @@
 #include "slamwidget.h"
 #include <QParallelAnimationGroup>
 
-SlamWidget::SlamWidget(QWidget *parent, const QColor& unact_color, const QColor& act_color) : LaunchWidget(parent, unact_color, act_color)
+SlamWidget::SlamWidget(QWidget *parent) : LaunchWidget(parent, QColor(241, 148, 138), QColor(203, 67, 53))
 {
     label_title->setText("SLAM");
     label_main_icon->setStyleSheet("QLabel{"
                              "image:url(:/icons/icons/slam_interface/svg/slam.svg);"
                              "}");
 
-    label_launch_items->setText("SLAM Algorithm");
-    label_launch_items->setFixedWidth(120);
+    label_launch_items->setText("Algorithm");
+    label_launch_items->setFixedWidth(80);
 
     label_topic->setFixedWidth(120);
 
@@ -148,44 +148,77 @@ SlamWidget::SlamWidget(QWidget *parent, const QColor& unact_color, const QColor&
 */
 }
 
-void SlamWidget::saveCurrentConfig(QSettings *settings, const QString &group) {
+void SlamWidget::saveCurrentConfig(QSettings *settings, const QString &group, int index) {
     if(settings) {
         auto *model = table_in_dialog->model();
 
         settings->beginGroup(group);
-        settings->beginWriteArray("LAUNCH_FILE");
+        settings->beginWriteArray("MODULE_CONFIG");
+        settings->setArrayIndex(index);
+        settings->setValue("MODULE_NAME", this->label_title->text());
+        settings->setValue("LAUNCH_ITEM", this->combo_launch_items->currentText());
+        settings->setValue("TOPIC", this->combo_topic->currentText());
+
+        QString launch_config_key;
+        for(int i = 0; i < 10; i++) {
+            launch_config_key.push_back('A' + (rand() % 26));
+        }
+        settings->setValue("KEY", launch_config_key);
+        settings->endArray();
+        settings->endGroup();
+
+        settings->beginGroup(launch_config_key);
+        settings->beginWriteArray("LAUNCH_CONFIG");
         for (int i = 0; i < model->rowCount(); i++) {
             settings->setArrayIndex(i);
-            settings->setValue("SENSOR_NAME", model->data(model->index(i, 0)).toString());
+            settings->setValue("ITEM_NAME", model->data(model->index(i, 0)).toString());
             settings->setValue("WORKSPACE", model->data(model->index(i, 1)).toString());
             settings->setValue("FILENAME", model->data(model->index(i, 2)).toString());
             settings->setValue("LIDAR", model->data(model->index(i, 3), Qt::UserRole).toBool());
             settings->setValue("CAMERA", model->data(model->index(i, 4), Qt::UserRole).toBool());
             settings->setValue("IMU", model->data(model->index(i, 5), Qt::UserRole).toBool());
+            settings->setValue("OTHERS", model->data(model->index(i, 6), Qt::UserRole).toBool());
         }
         settings->endArray();
         settings->endGroup();
     }
 }
 
-void SlamWidget::loadConfig(QSettings *settings, const QString &group) {
+void SlamWidget::loadConfig(QSettings *settings, const QString &group, int index) {
     if(settings) {
-        QFont key_font;
+        QString launch_config_key = "";
 
         settings->beginGroup(group);
-        int size = settings->beginReadArray("LAUNCH_FILE");
+        int size = settings->beginReadArray("MODULE_CONFIG");
+        if(index < size) {
+            settings->setArrayIndex(index);
+            this->label_title->setText(settings->value("MODULE_NAME").toString());
+            this->combo_launch_items->setCurrentText(settings->value("LAUNCH_ITEM").toString());
+            this->combo_topic->setCurrentText(settings->value("TOPIC").toString());
+
+            launch_config_key = settings->value("KEY").toString();
+        }
+
+        settings->endArray();
+        settings->endGroup();
+
+        QFont key_font;
+        settings->beginGroup(launch_config_key);
+        size = settings->beginReadArray("LAUNCH_CONFIG");
         for (int i = 0; i < size; ++i) {
             QList<QStandardItem*> item;
             item << new QStandardItem("") << new QStandardItem("") << new QStandardItem("")
-                 << new QStandardItem("") << new QStandardItem("") << new QStandardItem("");
+                 << new QStandardItem("") << new QStandardItem("") << new QStandardItem("")
+                 << new QStandardItem("");
 
             settings->setArrayIndex(i);
-            item.at(0)->setText(settings->value("SENSOR_NAME").toString());
+            item.at(0)->setText(settings->value("ITEM_NAME").toString());
             item.at(1)->setText(settings->value("WORKSPACE").toString());
             item.at(2)->setText(settings->value("FILENAME").toString());
             item.at(3)->setData(settings->value("LIDAR"), Qt::UserRole);
             item.at(4)->setData(settings->value("CAMERA"), Qt::UserRole);
             item.at(5)->setData(settings->value("IMU"), Qt::UserRole);
+            item.at(6)->setData(settings->value("OTHERS"), Qt::UserRole);
 
             if(i == 0) {
                 key_font = item.at(0)->font();
@@ -217,20 +250,25 @@ void SlamWidget::setCameraWidget(LaunchWidget *wid) {
     this->camera_widget = wid;
 }
 
+void SlamWidget::setSensorWidgetArray(std::vector<std::unordered_set<SensorWidget*>> *wid_array) {
+    this->sensor_widget_array = wid_array;
+}
+
 void SlamWidget::onSlamChanged(int index) {
+    if(sensor_widget_array == nullptr)
+        return;
+
     auto *model = table_in_dialog->model();
+    for(int i = 0; i < SensorType::OTHERS; i++) {
+        bool need_sensor = model->data(model->index(index, i + 3), Qt::UserRole).toBool();
 
-    bool need_lidar = this->lidar_widget != nullptr && model->data(model->index(index, 3), Qt::UserRole).toBool();
-    bool need_camera = this->camera_widget != nullptr && model->data(model->index(index, 4), Qt::UserRole).toBool();
-    bool need_imu = this->imu_widget != nullptr && model->data(model->index(index, 5), Qt::UserRole).toBool();
-
-    if(need_lidar)
-        this->lidar_widget->playWinkAnimation();
-
-    if(need_camera)
-        this->camera_widget->playWinkAnimation();
-
-    if(need_imu)
-        this->imu_widget->playWinkAnimation();
+        if(need_sensor) {
+            for(SensorWidget* ws: (*sensor_widget_array)[i]) {
+                if(ws) {
+                    ws->playWinkAnimation();
+                }
+            }
+        }
+    }
 
 }

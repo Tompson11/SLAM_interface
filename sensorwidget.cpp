@@ -1,24 +1,48 @@
 #include "sensorwidget.h"
 
-SensorWidget::SensorWidget(QWidget *parent, const SensorType &type, const QColor& unact_color, const QColor& act_color) : LaunchWidget(parent, unact_color, act_color)
+SensorWidget::SensorWidget(QWidget *parent, const SensorType &type, const QString &sensor_name) :
+    LaunchWidget(parent, DefaultSensorColorInActive[type], DefaultSensorColorActive[type]),
+    type_(type)
 {
+    QString init_name;
+    if(sensor_name.length() > 0) {
+        init_name = sensor_name;
+    }
+    else {
+        init_name = DefaultSensorName[type];
+    }
+    label_title->setText(init_name);
+
+    label_launch_items->setText("Sensor");
+    label_launch_items->setFixedWidth(50);
+
     switch (type) {
     case SensorType::CAMERA: {
-        label_title->setText("CAMERA");
         label_main_icon->setStyleSheet("QLabel{"
                                  "image:url(:/icons/icons/slam_interface/svg/camera.svg);"
                                  "}");
         break;
     }
     case SensorType::IMU: {
-        label_title->setText("IMU");
         label_main_icon->setStyleSheet("QLabel{"
                                  "image:url(:/icons/icons/slam_interface/svg/imu.svg);"
                                  "}");
         break;
     }
+    case SensorType::OTHERS: {
+        label_main_icon->setStyleSheet("QLabel{"
+                                 "image:url(:/icons/icons/slam_interface/svg/others.svg);"
+                                 "}");
+        break;
+    }
+    case SensorType::TOOLS: {
+        label_launch_items->setText("Tool");
+        label_main_icon->setStyleSheet("QLabel{"
+                                 "image:url(:/icons/icons/slam_interface/svg/tools.svg);"
+                                 "}");
+        break;
+    }
     default: {
-        label_title->setText("LIDAR");
         label_main_icon->setStyleSheet("QLabel{"
                                  "image:url(:/icons/icons/slam_interface/svg/lidar.svg);"
                                  "}");
@@ -26,9 +50,6 @@ SensorWidget::SensorWidget(QWidget *parent, const SensorType &type, const QColor
     }
     }
 
-
-    label_launch_items->setText("Sensor");
-    label_launch_items->setFixedWidth(50);
 
     label_topic->setFixedWidth(50);
 
@@ -95,12 +116,35 @@ SensorWidget::SensorWidget(QWidget *parent, const SensorType &type, const QColor
     */
 }
 
-void SensorWidget::saveCurrentConfig(QSettings *settings, const QString &group) {
+SensorType SensorWidget::getSensorType() {
+    return type_;
+}
+
+void SensorWidget::saveCurrentConfig(QSettings *settings, const QString &group, int index) {
     if(settings) {
         auto *model = table_in_dialog->model();
 
         settings->beginGroup(group);
-        settings->beginWriteArray("LAUNCH_FILE");
+        settings->beginWriteArray("MODULE_CONFIG");
+        settings->setArrayIndex(index);
+        settings->setValue("MODULE_NAME", this->label_title->text());
+        settings->setValue("LAUNCH_ITEM", this->combo_launch_items->currentText());
+
+        bool ori_state = this->combo_topic->isEditable();
+        this->combo_topic->setEditable(true);
+        settings->setValue("TOPIC", this->combo_topic->currentText());
+        this->combo_topic->setEditable(ori_state);
+
+        QString launch_config_key;
+        for(int i = 0; i < 10; i++) {
+            launch_config_key.push_back('A' + (rand() % 26));
+        }
+        settings->setValue("KEY", launch_config_key);
+        settings->endArray();
+        settings->endGroup();
+
+        settings->beginGroup(launch_config_key);
+        settings->beginWriteArray("LAUNCH_CONFIG");
         for (int i = 0; i < model->rowCount(); i++) {
             settings->setArrayIndex(i);
             settings->setValue("SENSOR_NAME", model->data(model->index(i, 0)).toString());
@@ -112,12 +156,29 @@ void SensorWidget::saveCurrentConfig(QSettings *settings, const QString &group) 
     }
 }
 
-void SensorWidget::loadConfig(QSettings *settings, const QString &group) {
+void SensorWidget::loadConfig(QSettings *settings, const QString &group, int index) {
     if(settings) {
-        QFont key_font;
+        QString launch_config_key = "";
 
         settings->beginGroup(group);
-        int size = settings->beginReadArray("LAUNCH_FILE");
+        int size = settings->beginReadArray("MODULE_CONFIG");
+        if(index < size) {
+            settings->setArrayIndex(index);
+            this->label_title->setText(settings->value("MODULE_NAME").toString());
+            this->combo_launch_items->setCurrentText(settings->value("LAUNCH_ITEM").toString());
+
+            this->combo_topic->addItem(settings->value("TOPIC").toString());
+            this->combo_topic->setCurrentText(settings->value("TOPIC").toString());
+
+            launch_config_key = settings->value("KEY").toString();
+        }
+
+        settings->endArray();
+        settings->endGroup();
+
+        QFont key_font;
+        settings->beginGroup(launch_config_key);
+        size = settings->beginReadArray("LAUNCH_CONFIG");
         for (int i = 0; i < size; ++i) {
             QList<QStandardItem*> item;
             item << new QStandardItem("") << new QStandardItem("") << new QStandardItem("");
@@ -142,5 +203,6 @@ void SensorWidget::loadConfig(QSettings *settings, const QString &group) {
         settings->endGroup();
 
         updateLaunchCombo();
+
     }
 }

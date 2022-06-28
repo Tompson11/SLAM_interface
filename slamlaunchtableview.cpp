@@ -2,13 +2,14 @@
 
 SlamLaunchTableView::SlamLaunchTableView(QWidget *parent) : LaunchTableView(parent)
 {
-    model_->setColumnCount(6);
-    model_->setHeaderData(0, Qt::Horizontal, "Sensor Name");
+    model_->setColumnCount(7);
+    model_->setHeaderData(0, Qt::Horizontal, "Program Name");
     model_->setHeaderData(1, Qt::Horizontal, "Workspace");
     model_->setHeaderData(2, Qt::Horizontal, "Launch File");
     model_->setHeaderData(3, Qt::Horizontal, "LiDAR");
     model_->setHeaderData(4, Qt::Horizontal, "Camera");
     model_->setHeaderData(5, Qt::Horizontal, "IMU");
+    model_->setHeaderData(6, Qt::Horizontal, "Others");
 }
 
 bool SlamLaunchTableView::isRowIncomplete(int row) {

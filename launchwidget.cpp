@@ -9,6 +9,11 @@ LaunchWidget::LaunchWidget(QWidget *parent, const QColor& unact_color, const QCo
 
 }
 
+LaunchWidget::~LaunchWidget() {
+    killRoslaunchProgram();
+    unregisterFromRoscore();
+}
+
 void LaunchWidget::constructWidget() {
     const int first_column_width = 100;
     label_toggle_back->setFixedWidth(first_column_width);
@@ -109,6 +114,11 @@ void LaunchWidget::connectSignal() {
 
     connect(process_launch, &QProcess::readyReadStandardError,this,&LaunchWidget::handleRoslaunchError);
 }
+
+bool LaunchWidget::isLaunchProgramRunning() {
+    return process_launch && process_launch->state() == QProcess::Running;
+}
+
 
 QAbstractItemModel* LaunchWidget::getTableModel() {
     return table_in_dialog->model();
@@ -299,9 +309,7 @@ void LaunchWidget::onToggled(bool tog) {
         toggle_start->setEnabled(false);
         progress_open->setVisible(true);
 
-        utils::killSystemProcess(nullptr, "roslaunch", QString::number(process_launch->pid()));
-        process_launch->terminate();
-        process_launch->waitForFinished();
+        killRoslaunchProgram();
 
         onRoslaunchFail(false, "");
         unregisterFromRoscore();
@@ -327,6 +335,14 @@ void LaunchWidget::unregisterFromRoscore() {
         roscore_widget->unregisterRosProgram(launch_program_name);
 }
 
+void LaunchWidget::killRoslaunchProgram() {
+    if(isLaunchProgramRunning()) {
+        utils::killSystemProcess(nullptr, "roslaunch", QString::number(process_launch->pid()));
+        process_launch->terminate();
+        process_launch->waitForFinished();
+    }
+}
+
 void LaunchWidget::onRoslaunchSuccess() {
     progress_open->setVisible(false);
     toggle_start->setEnabled(true);
@@ -350,7 +366,6 @@ void LaunchWidget::onRoslaunchFail(bool reset_toggle, const QString &err_msg) {
     checkbox_hz->setEnabled(false);
     combo_launch_items->setEnabled(true);
     combo_topic->setEnabled(false);
-    combo_topic->clear();
     label_hz->setText("");
 
     if(reset_toggle) {
@@ -553,8 +568,10 @@ void LaunchWidget::getTopicsOfTheLaunchFile(const QString &workspace_bash, const
 
         topic_list.sort(Qt::CaseInsensitive);
         topic_list.push_front("");
+        QString cur_text = combo_topic->currentText();
         combo_topic->clear();
         combo_topic->addItems(topic_list);
+        combo_topic->setCurrentText(cur_text);
     }
 
     pool.returnOneProcess(p);
@@ -653,3 +670,12 @@ void LaunchWidget::setLaunchItemColor() {
 
 }
 
+void LaunchWidget::onButtonRemoveClicked() {
+    if(isLaunchProgramRunning()) {
+        auto ret = QMessageBox::question(this, "Remove Confirmation", "The program is stiil running, whether to remove?");
+        if(ret != QMessageBox::Yes)
+            return;
+    }
+
+    this->prepareDisappearAnimation(30);
+}

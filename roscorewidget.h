@@ -30,7 +30,7 @@ class RoscoreWidget : public TitleWidget
 {
     Q_OBJECT
 public:
-    explicit RoscoreWidget(QWidget *parent = nullptr, const QColor& unact_color = QColor(255,255,255), const QColor& act_color = QColor(255,255,255));
+    explicit RoscoreWidget(QWidget *parent = nullptr);
     bool getSourceROSCmd(QString &cmd);
     void saveCurrentConfig(QSettings *settings, const QString &group);
     void loadConfig(QSettings *settings, const QString &group);

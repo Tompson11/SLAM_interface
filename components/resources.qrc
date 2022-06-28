@@ -973,5 +973,7 @@
         <file>icons/slam_interface/svg/lidar.svg</file>
         <file>icons/slam_interface/svg/imu.svg</file>
         <file>icons/slam_interface/svg/slam.svg</file>
+        <file>icons/slam_interface/svg/tools.svg</file>
+        <file>icons/slam_interface/svg/others.svg</file>
     </qresource>
 </RCC>
