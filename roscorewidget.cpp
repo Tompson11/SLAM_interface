@@ -195,6 +195,9 @@ void RoscoreWidget::onToggled(bool tog) {
 
              onRoscoreOpenFail(false, "");
          }
+         else {
+             onRoscoreOpenFail(false, "");
+         }
      }
 }
 
