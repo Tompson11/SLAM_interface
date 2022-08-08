@@ -179,6 +179,8 @@ void MainWindow::loadConfig(const QString &setting_name) {
             wid->setRoscoreWidget(roscore_widget);
             wid->loadConfig(settings, DefaultSensorName[SensorType::TOOLS], j);
             tool_group_widget->appendWidget(wid);
+
+            sensor_widget_array[SensorType::TOOLS].emplace(static_cast<SensorWidget*>(wid));
         }
 
 
