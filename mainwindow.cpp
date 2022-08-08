@@ -262,11 +262,13 @@ void MainWindow::saveCurrentConfig() {
 
 void MainWindow::onNewLaunchWidgetAdded(LaunchWidget *wid) {
     if(SensorWidget *wid_s = dynamic_cast<SensorWidget*>(wid)) {
+        wid_s->setRoscoreWidget(roscore_widget);
         sensor_widget_array[wid_s->getSensorType()].emplace(wid_s);
     }
     else if(SlamWidget *wid_s = dynamic_cast<SlamWidget*>(wid)) {
-        slam_widget_array.emplace(wid_s);
+        wid_s->setRoscoreWidget(roscore_widget);
         wid_s->setSensorWidgetArray(&sensor_widget_array);
+        slam_widget_array.emplace(wid_s);
     }
     else {
 

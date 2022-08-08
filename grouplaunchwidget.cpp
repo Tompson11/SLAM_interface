@@ -143,7 +143,7 @@ LaunchWidget* GroupLaunchWidget::createAddedWidget() {
             return new SensorWidget(this, SensorType(combo_type_in_dialog_->currentIndex()), edit_in_dialog_->text());
         }
         else if(module_name == "SLAM") {
-            return new SlamWidget(this);
+            return new SlamWidget(this, edit_in_dialog_->text());
         }
         else if(module_name == "Tool"){
             return new SensorWidget(this, SensorType::TOOLS, edit_in_dialog_->text());

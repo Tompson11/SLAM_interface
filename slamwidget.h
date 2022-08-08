@@ -11,7 +11,7 @@ class SlamWidget : public LaunchWidget
 {
     Q_OBJECT
 public:
-    explicit SlamWidget(QWidget *parent = nullptr);
+    explicit SlamWidget(QWidget *parent = nullptr, const QString &name = "SLAM");
     virtual void saveCurrentConfig(QSettings *settings, const QString &group, int index);
     virtual void loadConfig(QSettings *settings, const QString &group, int index);
     void setImuWidget(LaunchWidget *wid);

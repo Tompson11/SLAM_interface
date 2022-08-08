@@ -1,9 +1,9 @@
 #include "slamwidget.h"
 #include <QParallelAnimationGroup>
 
-SlamWidget::SlamWidget(QWidget *parent) : LaunchWidget(parent, QColor(241, 148, 138), QColor(203, 67, 53))
+SlamWidget::SlamWidget(QWidget *parent, const QString &name) : LaunchWidget(parent, QColor(241, 148, 138), QColor(203, 67, 53))
 {
-    label_title->setText("SLAM");
+    label_title->setText(name.size() ? name : "SLAM");
     label_main_icon->setStyleSheet("QLabel{"
                              "image:url(:/icons/icons/slam_interface/svg/slam.svg);"
                              "}");
