@@ -43,7 +43,7 @@ private:
 
 signals:
 
-protected slots:
+public slots:
     void onBadgeClicked();
     void onButtonClearClicked();
 

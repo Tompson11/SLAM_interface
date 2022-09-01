@@ -30,6 +30,7 @@ TitleWidget::TitleWidget(QWidget *parent, const QColor& unact_color, const QColo
     title_layout->setMargin(0);
 
     title_frame = new QFrame(this);
+    title_frame->setFixedHeight(48);
     title_frame->setLayout(title_layout);
     title_frame->setStyleSheet(".QFrame{"
                                "border-top-left-radius: 15px;"
@@ -44,7 +45,7 @@ TitleWidget::TitleWidget(QWidget *parent, const QColor& unact_color, const QColo
 
     main_layout = new QVBoxLayout();
     main_layout->addWidget(title_frame, 0);
-    main_layout->addWidget(body_frame, 0);
+    main_layout->addWidget(body_frame, 0, Qt::AlignTop);
     main_layout->setSpacing(0);
     this->setLayout(main_layout);
 
@@ -174,7 +175,7 @@ void TitleWidget::setRemoveable(bool on) {
         if(button_remove == nullptr) {
             button_remove = new QtMaterialRaisedButton(this);
             button_remove->setText("x");
-            title_layout->addWidget(button_remove, 0, 1, 1, 1, Qt::AlignRight | Qt::AlignTop);
+            title_layout->addWidget(button_remove, 0, 5, 1, 1, Qt::AlignRight);
             connect(button_remove, &QtMaterialRaisedButton::clicked, this, &TitleWidget::onButtonRemoveClicked);
         }
         else {

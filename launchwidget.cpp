@@ -49,6 +49,12 @@ void LaunchWidget::constructWidget() {
     button_config->setText("Configure");
     button_config->setFixedWidth(first_column_width);
 
+    button_log = new QtMaterialRaisedButton(this);
+    button_log->setText("Log");
+    button_log->setFixedWidth(first_column_width);
+    button_log->setBackgroundColor(QtMaterialStyle::instance().themeColor("accent1"));
+    button_log->hide();
+
     dialog_config = new LaunchConfigDialog(this);
     dialog_config->setWindowTitle("Sensor Configure");
     dialog_config->resize(1080,720);
@@ -97,6 +103,7 @@ void LaunchWidget::constructLayout() {
 
 void LaunchWidget::connectSignal() {
     connect(button_config, &QtMaterialRaisedButton::clicked, this, &LaunchWidget::onButtonConfigureClicked);
+    connect(button_log, &QtMaterialRaisedButton::clicked, this, &LaunchWidget::onButtonLogClicked);
     connect(button_add_in_dialog, &QtMaterialRaisedButton::clicked, this, &LaunchWidget::onButtonAddClicked);
     connect(button_delete_in_dialog, &QtMaterialRaisedButton::clicked, this, &LaunchWidget::onButtonDeleteClicked);
 
@@ -112,7 +119,40 @@ void LaunchWidget::connectSignal() {
     connect(&timer_topic, &QTimer::timeout, this, &LaunchWidget::onHzOutput);
     connect(&timer_roslaunch_detect, &QTimer::timeout, this, &LaunchWidget::detectRoslaunchResult);
 
+    connect(process_launch, &QProcess::readyReadStandardOutput,this,&LaunchWidget::handleRoslaunchStd);
     connect(process_launch, &QProcess::readyReadStandardError,this,&LaunchWidget::handleRoslaunchError);
+}
+
+void LaunchWidget::toggleCompactLayout() {
+    use_compact_layout = !use_compact_layout;
+
+    if(use_compact_layout) {
+        body_frame->hide();
+        button_log->show();
+        title_layout->addWidget(combo_topic, 0, 2, 1, 1);
+        title_layout->addWidget(button_config, 0, 3, 1, 1, Qt::AlignCenter);
+        title_layout->addWidget(button_log, 0, 4, 1, 1, Qt::AlignCenter);
+        title_layout->setSpacing(10);
+        title_layout->setColumnStretch(0, 0);
+        title_layout->setColumnStretch(1, 0);
+        title_layout->setColumnStretch(2, 1);
+        title_layout->setColumnStretch(3, 0);
+        title_layout->setColumnStretch(4, 0);
+        title_layout->setColumnStretch(5, 0);
+    }
+    else {
+        body_frame->show();
+        button_log->hide();
+        body_layout->addWidget(button_config, 2, 0 ,1, 1);
+        body_layout->addWidget(combo_topic, 1, 2, 1, 1);
+        title_layout->setColumnStretch(0, 0);
+        title_layout->setColumnStretch(1, 1);
+        title_layout->setColumnStretch(2, 0);
+        title_layout->setColumnStretch(3, 0);
+        title_layout->setColumnStretch(4, 0);
+        title_layout->setColumnStretch(5, 0);
+    }
+
 }
 
 bool LaunchWidget::isLaunchProgramRunning() {
@@ -153,6 +193,10 @@ bool LaunchWidget::isRoscoreOpened() {
 
 void LaunchWidget::onButtonConfigureClicked() {
     dialog_config->exec();
+}
+
+void LaunchWidget::onButtonLogClicked() {
+    badge->onBadgeClicked();
 }
 
 void LaunchWidget::onButtonAddClicked() {
@@ -629,6 +673,15 @@ void LaunchWidget::onHzOutput() {
 void LaunchWidget::handleRoslaunchError() {
     QString out_str;
     utils::getQProcessStandardError(process_launch, out_str, true);
+
+    if(!out_str.isEmpty()) {
+        badge->appendMsg(out_str);
+    }
+}
+
+void LaunchWidget::handleRoslaunchStd() {
+    QString out_str;
+    utils::getQProcessStandardOutput(process_launch, out_str, true);
 
     if(!out_str.isEmpty()) {
         badge->appendMsg(out_str);

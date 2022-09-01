@@ -10,7 +10,10 @@
 #include <QScrollArea>
 #include <QMenuBar>
 #include <QAction>
+#include <QScreen>
 #include "grouplaunchwidget.h"
+#include "components/qtmaterialtoggle.h"
+#include "components/qtmaterialscrollbar.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,8 +31,13 @@ public:
 private:
     void saveCurrentConfig();
     void loadConfig(const QString &setting_name);
+    void modifyGroupLaunchWidgetSize();
 
     Ui::MainWindow *ui;
+
+    QRect screen_size;
+    int max_group_launch_widget_height;
+    bool use_compact_layout = false;
 
     QMenuBar *main_menu;
     QMenu *menu_file;
@@ -40,13 +48,24 @@ private:
     QFileDialog *dialog_open_config;
     QFileDialog *dialog_saveas_config;
 
+    QLabel *label_compact;
+    QtMaterialToggle *toggle_compact_layout;
+
     RoscoreWidget *roscore_widget;
+
+    QLabel *label_name_sensor_group;
+    QLabel *label_name_tool_group;
 
     GroupLaunchWidget *sensor_group_widget;
     GroupLaunchWidget *tool_group_widget;
 
     QScrollArea *scroll_area_sensor_group;
     QScrollArea *scroll_area_tool_group;
+
+    QtMaterialScrollBar *scrollbar_sensor_group_hori;
+    QtMaterialScrollBar *scrollbar_sensor_group_vert;
+    QtMaterialScrollBar *scrollbar_tool_group_hori;
+    QtMaterialScrollBar *scrollbar_tool_group_vert;
 
     std::vector<std::unordered_set<SensorWidget*>> sensor_widget_array;
     std::unordered_set<SlamWidget*> slam_widget_array;
@@ -66,5 +85,6 @@ protected slots:
     void onLaunchWidgetRemoved(LaunchWidget *wid);
     void onOpenConfigClicked();
     void onSaveAsConfigClicked();
+    void onToggled(bool tog);
 };
 #endif // MAINWINDOW_H

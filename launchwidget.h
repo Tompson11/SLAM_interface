@@ -24,6 +24,7 @@
 #include "components/qtmaterialdialog.h"
 #include "components/qtmaterialcheckbox.h"
 #include "components/qtmaterialdrawer.h"
+#include "components/lib/qtmaterialstyle.h"
 #include "launchconfigdialog.h"
 #include "roscorewidget.h"
 #include "focusincombobox.h"
@@ -50,6 +51,7 @@ public:
     QAbstractItemModel* getTableModel();
     virtual void saveCurrentConfig(QSettings *settings, const QString &group, int index = 0) = 0;
     virtual void loadConfig(QSettings *settings, const QString &group, int index = 0) = 0;
+    virtual void toggleCompactLayout();
 
 protected:
     void registerToRoscore();
@@ -71,6 +73,8 @@ protected:
     bool isRoscoreOpened();
     virtual void generateLaunchProgramName();
 
+    bool use_compact_layout = false;
+
     // Widget
     QtMaterialCircularProgress *progress_open;
 
@@ -86,6 +90,7 @@ protected:
     QLabel *label_hz;
 
     QtMaterialRaisedButton *button_config;
+    QtMaterialRaisedButton *button_log;
 
     LaunchConfigDialog *dialog_config;
     LaunchTableView *table_in_dialog;
@@ -128,6 +133,7 @@ protected slots:
     void onButtonAddClicked();
     void onButtonDeleteClicked();
     void onButtonConfigureClicked();
+    void onButtonLogClicked();
     void onHzChecked(bool tog);
     void onTopicChanged(const QString &text);
     void onLaunchItemChanged(const QString &text);
@@ -139,6 +145,7 @@ protected slots:
     void updateLaunchCombo();
     void detectRoslaunchResult();
     void handleRoslaunchError();
+    void handleRoslaunchStd();
     void onRoscoreClosed();
     void onLaunchParamChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int> ());
 

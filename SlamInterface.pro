@@ -31,6 +31,10 @@ SOURCES += \
     components/qtmaterialflatbutton.cpp \
     components/qtmaterialflatbutton_internal.cpp \
     components/qtmaterialraisedbutton.cpp \
+    components/qtmaterialscrollbar.cpp \
+    components/qtmaterialscrollbar_internal.cpp \
+    components/qtmaterialslider.cpp \
+    components/qtmaterialslider_internal.cpp \
     components/qtmaterialsnackbar.cpp \
     components/qtmaterialsnackbar_internal.cpp \
     components/qtmaterialtextfield.cpp \
@@ -94,6 +98,12 @@ HEADERS += \
     components/qtmaterialflatbutton_p.h \
     components/qtmaterialraisedbutton.h \
     components/qtmaterialraisedbutton_p.h \
+    components/qtmaterialscrollbar.h \
+    components/qtmaterialscrollbar_internal.h \
+    components/qtmaterialscrollbar_p.h \
+    components/qtmaterialslider.h \
+    components/qtmaterialslider_internal.h \
+    components/qtmaterialslider_p.h \
     components/qtmaterialsnackbar.h \
     components/qtmaterialsnackbar_internal.h \
     components/qtmaterialsnackbar_p.h \

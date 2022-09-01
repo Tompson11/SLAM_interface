@@ -23,12 +23,14 @@ public:
     explicit GroupLaunchWidget(QWidget *parent = nullptr, const QString &group_name = "", int allowed_module = MODULE_SENSOR | MODULE_SLAM | MODULE_TOOL);
     void appendWidget(LaunchWidget *wid);
     void clearWidgets();
+    void toggleCompactLayout();
+    int getCompactHeight();
 
 protected:
     QGridLayout *main_layout_;
     QHBoxLayout *group_layout_;
+    QVBoxLayout *group_layout_compact_;
 
-    QLabel *label_name_;
     QtMaterialRaisedButton *add_button_;
 
     QDialog *dialog_;
@@ -40,6 +42,8 @@ protected:
     QComboBox *combo_type_in_dialog_;
     QLineEdit *edit_in_dialog_;
     QtMaterialRaisedButton *button_in_dialog_;
+
+    bool use_compact_layout_ = false;
 
     bool to_create_widget_ = false;
     int allowed_module_;

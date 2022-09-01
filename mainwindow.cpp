@@ -10,6 +10,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     utils::ShellPool<utils::SHELL_BASH>::getInstance().setParent(this);
 
+    screen_size = QGuiApplication::primaryScreen()->availableGeometry();
+    max_group_launch_widget_height = screen_size.height() * 0.35;
+
     main_menu = new QMenuBar(this);
     menu_file = new QMenu("&File", this);
     action_open_config = new QAction("&Open Config", this);
@@ -37,6 +40,12 @@ MainWindow::MainWindow(QWidget *parent)
     default_setting_path = QString::fromLatin1(std::getenv("HOME")) + "/.slaminterface";
     default_setting_name = default_setting_path + "/setting.ini";
 
+    label_compact = new QLabel(this);
+    label_compact->setText("compact");
+
+    toggle_compact_layout = new QtMaterialToggle(this);
+    toggle_compact_layout->setMinimumHeight(48);
+
     roscore_widget = new RoscoreWidget(this);
 
     sensor_group_widget = new GroupLaunchWidget(this, "Sensors", GroupLaunchWidget::MODULE_SENSOR);
@@ -54,35 +63,91 @@ MainWindow::MainWindow(QWidget *parent)
 //    sensor_layout->addWidget(w2, 0, Qt::AlignLeft);
 //    sensor_layout->addWidget(w3, 0, Qt::AlignLeft);
 
+    scrollbar_sensor_group_hori = new QtMaterialScrollBar();
+    scrollbar_sensor_group_hori->setOrientation(Qt::Horizontal);
+    scrollbar_sensor_group_vert = new QtMaterialScrollBar();
+    scrollbar_sensor_group_vert->setOrientation(Qt::Vertical);
+
+    scrollbar_tool_group_hori = new QtMaterialScrollBar();
+    scrollbar_tool_group_hori->setOrientation(Qt::Horizontal);
+    scrollbar_tool_group_vert = new QtMaterialScrollBar();
+    scrollbar_tool_group_vert->setOrientation(Qt::Vertical);
+
     scroll_area_sensor_group = new QScrollArea();
     scroll_area_sensor_group->setWidget(sensor_group_widget);
     scroll_area_sensor_group->setFrameShape(QFrame::NoFrame);
-    scroll_area_sensor_group->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll_area_sensor_group->setHorizontalScrollBar(scrollbar_sensor_group_hori);
+    scroll_area_sensor_group->setVerticalScrollBar(scrollbar_sensor_group_vert);
+    scroll_area_sensor_group->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scroll_area_sensor_group->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scroll_area_sensor_group->setWidgetResizable(true);
     scroll_area_sensor_group->setAlignment(Qt::AlignLeft);
-    scroll_area_sensor_group->setMaximumWidth(2000);
-    scroll_area_sensor_group->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::MinimumExpanding);
+    scroll_area_sensor_group->setMaximumWidth(screen_size.width());
+    scroll_area_sensor_group->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::MinimumExpanding);
 
     scroll_area_tool_group = new QScrollArea();
     scroll_area_tool_group->setWidget(tool_group_widget);
     scroll_area_tool_group->setFrameShape(QFrame::NoFrame);
-    scroll_area_tool_group->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll_area_tool_group->setHorizontalScrollBar(scrollbar_tool_group_hori);
+    scroll_area_tool_group->setVerticalScrollBar(scrollbar_tool_group_vert);
+    scroll_area_tool_group->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scroll_area_tool_group->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scroll_area_tool_group->setWidgetResizable(true);
     scroll_area_tool_group->setAlignment(Qt::AlignLeft);
-    scroll_area_tool_group->setMaximumWidth(2000);
-    scroll_area_tool_group->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::MinimumExpanding);
+    scroll_area_tool_group->setMaximumWidth(screen_size.width());
+    scroll_area_tool_group->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::MinimumExpanding);
+
+    label_name_sensor_group = new QLabel(this);
+    label_name_sensor_group->setText("Sensors");
+    label_name_sensor_group->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    label_name_sensor_group->setStyleSheet("background:transparent;border-width:0;border-style:outset;"
+                               "font-size: 25px;"
+                               "font-weight: bold;"
+                               "color: #FF6633;"
+                               );
+
+    label_name_tool_group = new QLabel(this);
+    label_name_tool_group->setText("SLAM & Tools");
+    label_name_tool_group->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    label_name_tool_group->setStyleSheet("background:transparent;border-width:0;border-style:outset;"
+                               "font-size: 25px;"
+                               "font-weight: bold;"
+                               "color: #FF6633;"
+                               );
 
     QWidget *mainwidget = new QWidget(this);
-    QVBoxLayout *layout = new QVBoxLayout(mainwidget);
-    layout->addWidget(roscore_widget, Qt::AlignTop);
-//    layout->addLayout(sensor_layout, Qt::AlignTop);
-    layout->addWidget(scroll_area_sensor_group, Qt::AlignTop);
-    layout->addWidget(scroll_area_tool_group, Qt::AlignTop);
+//    QVBoxLayout *layout = new QVBoxLayout(mainwidget);
+//    layout->addWidget(roscore_widget, Qt::AlignTop);
+////    layout->addLayout(sensor_layout, Qt::AlignTop);
+//    layout->addWidget(scroll_area_sensor_group, Qt::AlignTop);
+//    layout->addWidget(scroll_area_tool_group, Qt::AlignTop);
+
+    QGridLayout *layout = new QGridLayout(mainwidget);
+    layout->setSpacing(0);
+    layout->setColumnStretch(0, 5);
+    layout->setColumnStretch(1, 1);
+    layout->setColumnStretch(2, 1);
+    QLabel *label_placehold = new QLabel(this);
+    layout->addWidget(roscore_widget, 0, 0, 1, 3);
+    layout->addWidget(label_name_sensor_group, 1, 0, 1, 1);
+    layout->addWidget(label_compact, 1, 1, 1, 1, Qt::AlignRight);
+    layout->addWidget(toggle_compact_layout, 1, 2, 1, 1);
+    layout->addWidget(scroll_area_sensor_group, 2, 0, 1, 3);
+    layout->addWidget(label_name_tool_group, 3, 0, 1, 3);
+    layout->addWidget(scroll_area_tool_group, 4, 0, 1, 3);
+    layout->addWidget(label_placehold, 5, 0, 1, 3);
+    layout->setRowStretch(0, 0);
+    layout->setRowStretch(1, 0);
+    layout->setRowStretch(2, 1);
+    layout->setRowStretch(3, 0);
+    layout->setRowStretch(4, 1);
+    layout->setRowStretch(5, 0);
+
+
     mainwidget->setLayout(layout);
     setCentralWidget(mainwidget);
 
+    connect(toggle_compact_layout, SIGNAL(toggled(bool)), this, SLOT(onToggled(bool)));
     connect(sensor_group_widget, SIGNAL(launchWidgetAdded(LaunchWidget*)), this, SLOT(onNewLaunchWidgetAdded(LaunchWidget*)));
     connect(sensor_group_widget, SIGNAL(launchWidgetRemoved(LaunchWidget*)), this, SLOT(onLaunchWidgetRemoved(LaunchWidget*)));
     connect(tool_group_widget, SIGNAL(launchWidgetAdded(LaunchWidget*)), this, SLOT(onNewLaunchWidgetAdded(LaunchWidget*)));
@@ -275,6 +340,8 @@ void MainWindow::onNewLaunchWidgetAdded(LaunchWidget *wid) {
     else {
 
     }
+
+    modifyGroupLaunchWidgetSize();
 }
 
 void MainWindow::onLaunchWidgetRemoved(LaunchWidget *wid) {
@@ -287,6 +354,8 @@ void MainWindow::onLaunchWidgetRemoved(LaunchWidget *wid) {
     else {
 
     }
+
+    modifyGroupLaunchWidgetSize();
 }
 
 void MainWindow::onOpenConfigClicked() {
@@ -316,5 +385,49 @@ void MainWindow::onSaveAsConfigClicked() {
     else
     {
         return;
+    }
+}
+
+void MainWindow::onToggled(bool tog) {
+    use_compact_layout = !use_compact_layout;
+
+    sensor_group_widget->toggleCompactLayout();
+    tool_group_widget->toggleCompactLayout();
+
+    for(int i = 0; i <= SensorType::TOOLS; i++) {
+       for(SensorWidget* wid : sensor_widget_array[i]) {
+           if(wid) {
+                wid->toggleCompactLayout();
+           }
+       }
+    }
+
+    for(SlamWidget* wid : slam_widget_array) {
+        if(wid) {
+             wid->toggleCompactLayout();
+        }
+    }
+
+    modifyGroupLaunchWidgetSize();
+}
+
+void MainWindow::modifyGroupLaunchWidgetSize() {
+    if(use_compact_layout) {
+        int bef_height1 = scroll_area_sensor_group->height();
+        scroll_area_sensor_group->setMaximumHeight(std::min(sensor_group_widget->getCompactHeight(), max_group_launch_widget_height));
+        int aft_height1 = scroll_area_sensor_group->height();
+
+        int bef_height2 = scroll_area_tool_group->height();
+        scroll_area_tool_group->setMaximumHeight(std::min(tool_group_widget->getCompactHeight(), max_group_launch_widget_height));
+        int aft_height2 = scroll_area_tool_group->height();
+
+        int height_change = (aft_height1 + aft_height2) - (bef_height1 + bef_height2);
+        if(height_change < 0) {
+            this->resize(this->width(), this->height() + height_change);
+        }
+    }
+    else {
+        scroll_area_sensor_group->setMaximumHeight(screen_size.height() * 0.35);
+        scroll_area_tool_group->setMaximumHeight(screen_size.height() * 0.35);
     }
 }

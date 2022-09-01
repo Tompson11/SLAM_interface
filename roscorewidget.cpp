@@ -451,16 +451,20 @@ void RoscoreWidget::handleStandardError() {
         error_badge->appendMsg(out_str);
 
         if(this->state == WAIT_TO_START_ROSCORE) {
-            timer_ros_detect.stop();
-            timer_rosopen.stop();
-            if(out_str.indexOf("roscore cannot run as another roscore/master is already running") >= 0) {
+            bool opened = false;
+
+            if(out_str.indexOf("roscore cannot run as another roscore/master is already running") >= 0 ||
+               out_str.indexOf("host is not set to this machine") >= 0) {
+                opened = true;
+            }
+
+            if(opened) {
+                timer_ros_detect.stop();
+                timer_rosopen.stop();
                 setMasterURI(this->master_uri);
                 onRoscoreOpenSuccess("ROSCORE Opened!");
             }
-            else if(out_str.indexOf("host is not set to this machine") >= 0) {
-                setMasterURI(this->master_uri);
-                onRoscoreOpenSuccess("ROSCORE Opened!");
-            }
+
         }
     }
 }

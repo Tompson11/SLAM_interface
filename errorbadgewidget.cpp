@@ -5,12 +5,13 @@ ErrorBadgeWidget::ErrorBadgeWidget(QWidget *parent) : QWidget(parent)
     badge = new clickableBadge();
     badge->setVisible(false);
 
-    dialog_msg = new QDialog(this);
+    dialog_msg = new QDialog();
     dialog_msg->setWindowTitle("Log");
     dialog_msg->resize(1080,720);
 
     textedit_in_dialog = new QTextEdit(this);
     textedit_in_dialog->setReadOnly(true);
+    textedit_in_dialog->document()->setMaximumBlockCount(400);
 
     button_clear_in_dialog = new QtMaterialRaisedButton(this);
     button_clear_in_dialog->setText("clear");
@@ -55,8 +56,14 @@ void ErrorBadgeWidget::appendMsg(QString msg) {
 
     textedit_in_dialog->append(msg.trimmed());
     textedit_in_dialog->update();
-    unread_msg_nbr++;
 
-    badge->setText(QString::number(unread_msg_nbr));
+    if(unread_msg_nbr < 100) {
+        unread_msg_nbr++;
+        badge->setText(QString::number(unread_msg_nbr));
+    }
+    else {
+        badge->setText(QString("99+"));
+    }
+
     badge->setVisible(true);
 }
