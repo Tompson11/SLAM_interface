@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     utils::ShellPool<utils::SHELL_BASH>::getInstance().setParent(this);
 
-    screen_size = QGuiApplication::primaryScreen()->availableGeometry();
+    screen_size = utils::getScreenSize();
     max_group_launch_widget_height = screen_size.height() * 0.35;
 
     main_menu = new QMenuBar(this);
@@ -47,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent)
     toggle_compact_layout->setMinimumHeight(48);
 
     roscore_widget = new RoscoreWidget(this);
+    roscore_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::MinimumExpanding);
 
     sensor_group_widget = new GroupLaunchWidget(this, "Sensors", GroupLaunchWidget::MODULE_SENSOR);
     tool_group_widget = new GroupLaunchWidget(this, "SLAM & Tools", GroupLaunchWidget::MODULE_SLAM | GroupLaunchWidget::MODULE_TOOL);
@@ -122,11 +123,12 @@ MainWindow::MainWindow(QWidget *parent)
 //    layout->addWidget(scroll_area_sensor_group, Qt::AlignTop);
 //    layout->addWidget(scroll_area_tool_group, Qt::AlignTop);
 
-    QGridLayout *layout = new QGridLayout(mainwidget);
+    layout = new QGridLayout(mainwidget);
     layout->setSpacing(0);
     layout->setColumnStretch(0, 5);
     layout->setColumnStretch(1, 1);
     layout->setColumnStretch(2, 1);
+
     QLabel *label_placehold = new QLabel(this);
     layout->addWidget(roscore_widget, 0, 0, 1, 3);
     layout->addWidget(label_name_sensor_group, 1, 0, 1, 1);
@@ -138,11 +140,10 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(label_placehold, 5, 0, 1, 3);
     layout->setRowStretch(0, 0);
     layout->setRowStretch(1, 0);
-    layout->setRowStretch(2, 1);
+    layout->setRowStretch(2, 0);
     layout->setRowStretch(3, 0);
-    layout->setRowStretch(4, 1);
-    layout->setRowStretch(5, 0);
-
+    layout->setRowStretch(4, 0);
+    layout->setRowStretch(5, 1);
 
     mainwidget->setLayout(layout);
     setCentralWidget(mainwidget);
@@ -199,6 +200,8 @@ void MainWindow::loadConfig(const QString &setting_name) {
             sensor_widget_array[i].clear();
 
         int size;
+        int index_in_group;
+        std::map<int, LaunchWidget*> m_index2widget;
         for(int i = 0; i <= SensorType::OTHERS; i++) {
             settings->beginGroup(DefaultSensorName[i]);
             size = settings->beginReadArray("MODULE_CONFIG");
@@ -209,11 +212,15 @@ void MainWindow::loadConfig(const QString &setting_name) {
                 SensorType cur_type = static_cast<SensorType>(i);
                 SensorWidget *wid = new SensorWidget(this, cur_type);
                 wid->setRoscoreWidget(roscore_widget);
-                wid->loadConfig(settings, DefaultSensorName[i], j);
-                sensor_group_widget->appendWidget(wid);
+                wid->loadConfig(settings, DefaultSensorName[i], j, index_in_group);
+                m_index2widget.emplace(index_in_group, wid);
 
                 sensor_widget_array[cur_type].emplace(wid);
             }
+        }
+
+        for(auto &it : m_index2widget) {
+            sensor_group_widget->appendWidget(it.second);
         }
 
         tool_group_widget->clearWidgets();
@@ -224,12 +231,13 @@ void MainWindow::loadConfig(const QString &setting_name) {
         settings->endArray();
         settings->endGroup();
 
+        m_index2widget.clear();
         for(int j = 0; j < size; j++) {
             SlamWidget *wid = new SlamWidget(this);
             wid->setSensorWidgetArray(&sensor_widget_array);
             wid->setRoscoreWidget(roscore_widget);
-            wid->loadConfig(settings, DefaultSlamName, j);
-            tool_group_widget->appendWidget(wid);
+            wid->loadConfig(settings, DefaultSlamName, j, index_in_group);
+            m_index2widget.emplace(index_in_group, wid);
 
             slam_widget_array.emplace(wid);
         }
@@ -242,10 +250,14 @@ void MainWindow::loadConfig(const QString &setting_name) {
         for(int j = 0; j < size; j++) {
             LaunchWidget *wid = new SensorWidget(this, SensorType::TOOLS);
             wid->setRoscoreWidget(roscore_widget);
-            wid->loadConfig(settings, DefaultSensorName[SensorType::TOOLS], j);
-            tool_group_widget->appendWidget(wid);
+            wid->loadConfig(settings, DefaultSensorName[SensorType::TOOLS], j, index_in_group);
+            m_index2widget.emplace(index_in_group, wid);
 
             sensor_widget_array[SensorType::TOOLS].emplace(static_cast<SensorWidget*>(wid));
+        }
+
+        for(auto &it : m_index2widget) {
+            tool_group_widget->appendWidget(it.second);
         }
 
 
@@ -302,9 +314,10 @@ void MainWindow::saveCurrentConfig() {
 
     for(int i = 0; i <= SensorType::TOOLS; i++) {
        int cnt = 0;
+       GroupLaunchWidget *group_widget = (i == SensorType::TOOLS ? tool_group_widget : sensor_group_widget);
        for(SensorWidget* wid : sensor_widget_array[i]) {
            if(wid) {
-                wid->saveCurrentConfig(settings, DefaultSensorName[i], cnt);
+                wid->saveCurrentConfig(settings, DefaultSensorName[i], cnt, group_widget->getWidgetIndex(wid));
                 cnt++;
            }
        }
@@ -313,7 +326,7 @@ void MainWindow::saveCurrentConfig() {
     for(SlamWidget* wid : slam_widget_array) {
         int cnt = 0;
         if(wid) {
-             wid->saveCurrentConfig(settings, DefaultSlamName, cnt);
+             wid->saveCurrentConfig(settings, DefaultSlamName, cnt, tool_group_widget->getWidgetIndex(wid));
              cnt++;
         }
     }
@@ -391,6 +404,7 @@ void MainWindow::onSaveAsConfigClicked() {
 void MainWindow::onToggled(bool tog) {
     use_compact_layout = !use_compact_layout;
 
+    roscore_widget->toggleCompactLayout();
     sensor_group_widget->toggleCompactLayout();
     tool_group_widget->toggleCompactLayout();
 
@@ -413,6 +427,10 @@ void MainWindow::onToggled(bool tog) {
 
 void MainWindow::modifyGroupLaunchWidgetSize() {
     if(use_compact_layout) {
+        int bef_height0 = scroll_area_sensor_group->height();
+        roscore_widget->setMaximumHeight(roscore_widget->getCompactHeight());
+        int aft_height0 = scroll_area_sensor_group->height();
+
         int bef_height1 = scroll_area_sensor_group->height();
         scroll_area_sensor_group->setMaximumHeight(std::min(sensor_group_widget->getCompactHeight(), max_group_launch_widget_height));
         int aft_height1 = scroll_area_sensor_group->height();
@@ -421,13 +439,22 @@ void MainWindow::modifyGroupLaunchWidgetSize() {
         scroll_area_tool_group->setMaximumHeight(std::min(tool_group_widget->getCompactHeight(), max_group_launch_widget_height));
         int aft_height2 = scroll_area_tool_group->height();
 
-        int height_change = (aft_height1 + aft_height2) - (bef_height1 + bef_height2);
+        int height_change = (aft_height0 + aft_height1 + aft_height2) - (bef_height0 + bef_height1 + bef_height2);
         if(height_change < 0) {
             this->resize(this->width(), this->height() + height_change);
         }
+
+        layout->setRowStretch(2, 1);
+        layout->setRowStretch(4, 1);
+        layout->setRowStretch(5, 0);
     }
     else {
-        scroll_area_sensor_group->setMaximumHeight(screen_size.height() * 0.35);
-        scroll_area_tool_group->setMaximumHeight(screen_size.height() * 0.35);
+        roscore_widget->setMaximumHeight(max_group_launch_widget_height);
+        scroll_area_sensor_group->setMaximumHeight(max_group_launch_widget_height);
+        scroll_area_tool_group->setMaximumHeight(max_group_launch_widget_height);
+
+        layout->setRowStretch(2, 0);
+        layout->setRowStretch(4, 0);
+        layout->setRowStretch(5, 1);
     }
 }

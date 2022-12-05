@@ -12,8 +12,8 @@ class SlamWidget : public LaunchWidget
     Q_OBJECT
 public:
     explicit SlamWidget(QWidget *parent = nullptr, const QString &name = "SLAM");
-    virtual void saveCurrentConfig(QSettings *settings, const QString &group, int index);
-    virtual void loadConfig(QSettings *settings, const QString &group, int index);
+    virtual void saveCurrentConfig(QSettings *settings, const QString &group, int index, int index_in_group);
+    virtual void loadConfig(QSettings *settings, const QString &group, int index, int &index_in_group);
     void setImuWidget(LaunchWidget *wid);
     void setLidarWidget(LaunchWidget *wid);
     void setCameraWidget(LaunchWidget *wid);

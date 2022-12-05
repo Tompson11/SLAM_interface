@@ -29,6 +29,8 @@ public:
     void prepareAppearAnimation(int frame_num);
     void setRemoveable(bool on);
     void notifyCreate();
+    int getCompactHeight();
+    virtual void toggleCompactLayout();
 
 protected:
     void setColor(const QColor &color);
@@ -74,12 +76,15 @@ protected:
     int appear_step;
     int appear_target_width;
 
+    bool use_compact_layout = false;
+
 protected slots:
     virtual void onButtonRemoveClicked();
 
 signals:
     void titleWidgetCreate(QWidget*);
     void titleWidgetRemove(QWidget*);
+    void titleWidgetChangePosition(QWidget*, QWidget*);
 };
 
 #endif // TITLEWIDGET_H

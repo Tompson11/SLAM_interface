@@ -1,13 +1,17 @@
 #ifndef SYS_H
 #define SYS_H
 
+#include "sys.h"
 #include "unistd.h"
 #include "shellpool.h"
+#include <QApplication>
+#include <QDesktopWidget>
 #include <string>
 #include <signal.h>
 #include <iostream>
 #include <sys/stat.h>
 #include <sys/types.h>
+
 
 namespace utils {
 bool existDir(const std::string &dir) {
@@ -119,7 +123,12 @@ void killAllChildProcess(QProcess *p_bash, const QString &ppid, int signal = SIG
         p_bash->start();
         p_bash->waitForFinished();
     }
-}
+};
+
+QRect getScreenSize(){
+    static QRect screen = QApplication::desktop()->availableGeometry();
+    return screen;
+};
 
 };
 #endif // SYS_H

@@ -113,6 +113,14 @@ QColor TitleWidget::color() const {
     return this->current_color;
 }
 
+int TitleWidget::getCompactHeight() {
+    return 66;
+}
+
+void TitleWidget::toggleCompactLayout() {
+    return;
+}
+
 void TitleWidget::playWinkAnimation() {
     if(toggle_start->isChecked()) {
         animation_wink_backward->start();

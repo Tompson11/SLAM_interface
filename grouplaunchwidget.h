@@ -21,6 +21,7 @@ public:
     };
 
     explicit GroupLaunchWidget(QWidget *parent = nullptr, const QString &group_name = "", int allowed_module = MODULE_SENSOR | MODULE_SLAM | MODULE_TOOL);
+    int getWidgetIndex(QWidget *wid);
     void appendWidget(LaunchWidget *wid);
     void clearWidgets();
     void toggleCompactLayout();
@@ -52,6 +53,7 @@ protected:
 
 protected slots:
     void removeWidget(QWidget* w);
+    void bubbleChangeWidgetPosition(QWidget* w_from, QWidget* w_to);
     void onButtonAddClicked();
     void onButtonCreateClicked();
     void onModuleChanged(const QString &module_name);

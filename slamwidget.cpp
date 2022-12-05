@@ -148,7 +148,7 @@ SlamWidget::SlamWidget(QWidget *parent, const QString &name) : LaunchWidget(pare
 */
 }
 
-void SlamWidget::saveCurrentConfig(QSettings *settings, const QString &group, int index) {
+void SlamWidget::saveCurrentConfig(QSettings *settings, const QString &group, int index, int index_in_group) {
     if(settings) {
         auto *model = table_in_dialog->model();
 
@@ -158,6 +158,7 @@ void SlamWidget::saveCurrentConfig(QSettings *settings, const QString &group, in
         settings->setValue("MODULE_NAME", this->label_title->text());
         settings->setValue("LAUNCH_ITEM", this->combo_launch_items->currentText());
         settings->setValue("TOPIC", this->combo_topic->currentText());
+        settings->setValue("INDEX_IN_GROUP", index_in_group);
 
         QString launch_config_key;
         for(int i = 0; i < 10; i++) {
@@ -184,7 +185,7 @@ void SlamWidget::saveCurrentConfig(QSettings *settings, const QString &group, in
     }
 }
 
-void SlamWidget::loadConfig(QSettings *settings, const QString &group, int index) {
+void SlamWidget::loadConfig(QSettings *settings, const QString &group, int index, int &index_in_group) {
     if(settings) {
         QString launch_config_key = "";
 
@@ -195,6 +196,7 @@ void SlamWidget::loadConfig(QSettings *settings, const QString &group, int index
             this->label_title->setText(settings->value("MODULE_NAME").toString());
             this->combo_launch_items->setCurrentText(settings->value("LAUNCH_ITEM").toString());
             this->combo_topic->setCurrentText(settings->value("TOPIC").toString());
+            index_in_group = settings->value("INDEX_IN_GROUP").toInt();
 
             launch_config_key = settings->value("KEY").toString();
         }

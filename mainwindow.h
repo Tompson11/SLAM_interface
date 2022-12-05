@@ -67,6 +67,8 @@ private:
     QtMaterialScrollBar *scrollbar_tool_group_hori;
     QtMaterialScrollBar *scrollbar_tool_group_vert;
 
+    QGridLayout *layout;
+
     std::vector<std::unordered_set<SensorWidget*>> sensor_widget_array;
     std::unordered_set<SlamWidget*> slam_widget_array;
 

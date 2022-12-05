@@ -16,6 +16,9 @@ RoscoreWidget::RoscoreWidget(QWidget *parent) :
     label_title->setText("ROSCORE");
     label_toggle_back->setFixedWidth(100);
 
+    label_compact_master_url = new QLabel(this);
+    label_compact_master_url->hide();
+
     text_rospath = new QtMaterialTextField(this);
     text_rospath->setLabel("ROS Installment Path");
 
@@ -83,6 +86,23 @@ RoscoreWidget::~RoscoreWidget() {
 //        process_roscore->kill();
 //        process_roscore->waitForFinished();
 //    }
+}
+
+void RoscoreWidget::toggleCompactLayout() {
+    use_compact_layout = !use_compact_layout;
+
+    if(use_compact_layout) {
+        body_frame->hide();
+
+        label_compact_master_url->setText("<font color='red' size='4'> * MASTER: </font>" + text_master_uri->text());
+        label_compact_master_url->show();
+        title_layout->addWidget(label_compact_master_url, 0, 2, 1, 2, Qt::AlignHCenter);
+    }
+    else {
+        body_frame->show();
+        label_compact_master_url->hide();
+        title_layout->removeWidget(label_compact_master_url);
+    }
 }
 
 void RoscoreWidget::registerRosProgram(const QString &program) {

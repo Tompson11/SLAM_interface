@@ -37,6 +37,7 @@ public:
     bool isRoscoreOpened();
     void registerRosProgram(const QString &program);
     void unregisterRosProgram(const QString &program);
+    virtual void toggleCompactLayout() override;
     ~RoscoreWidget();
 
 private:
@@ -58,6 +59,7 @@ private:
     QtMaterialRaisedButton *button_localip;
     QtMaterialRaisedButton *button_dialog;
 
+    QLabel *label_compact_master_url;
     QLabel *label_roscore_icon;
     QLabel *label_ros_path;
 

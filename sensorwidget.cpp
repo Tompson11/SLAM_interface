@@ -120,7 +120,7 @@ SensorType SensorWidget::getSensorType() {
     return type_;
 }
 
-void SensorWidget::saveCurrentConfig(QSettings *settings, const QString &group, int index) {
+void SensorWidget::saveCurrentConfig(QSettings *settings, const QString &group, int index, int index_in_group) {
     if(settings) {
         auto *model = table_in_dialog->model();
 
@@ -129,6 +129,7 @@ void SensorWidget::saveCurrentConfig(QSettings *settings, const QString &group, 
         settings->setArrayIndex(index);
         settings->setValue("MODULE_NAME", this->label_title->text());
         settings->setValue("LAUNCH_ITEM", this->combo_launch_items->currentText());
+        settings->setValue("INDEX_IN_GROUP", index_in_group);
 
         bool ori_state = this->combo_topic->isEditable();
         this->combo_topic->setEditable(true);
@@ -156,7 +157,7 @@ void SensorWidget::saveCurrentConfig(QSettings *settings, const QString &group, 
     }
 }
 
-void SensorWidget::loadConfig(QSettings *settings, const QString &group, int index) {
+void SensorWidget::loadConfig(QSettings *settings, const QString &group, int index, int &index_in_group) {
     if(settings) {
         QString launch_config_key = "";
 
@@ -166,6 +167,7 @@ void SensorWidget::loadConfig(QSettings *settings, const QString &group, int ind
             settings->setArrayIndex(index);
             this->label_title->setText(settings->value("MODULE_NAME").toString());
             this->combo_launch_items->setCurrentText(settings->value("LAUNCH_ITEM").toString());
+            index_in_group = settings->value("INDEX_IN_GROUP").toInt();
 
             this->combo_topic->addItem(settings->value("TOPIC").toString());
             this->combo_topic->setCurrentText(settings->value("TOPIC").toString());

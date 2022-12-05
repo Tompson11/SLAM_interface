@@ -96,11 +96,16 @@ void GroupLaunchWidget::toggleCompactLayout() {
     }
 }
 
+int GroupLaunchWidget::getWidgetIndex(QWidget *wid) {
+    return group_layout_->indexOf(wid);
+}
+
 void GroupLaunchWidget::appendWidget(LaunchWidget *wid) {
     if(wid != nullptr) {
         wid->setRemoveable(true);
-        wid->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Expanding);
+        wid->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         connect(wid, SIGNAL(titleWidgetRemove(QWidget*)), this, SLOT(removeWidget(QWidget*)));
+        connect(wid, SIGNAL(titleWidgetChangePosition(QWidget*, QWidget*)), this, SLOT(bubbleChangeWidgetPosition(QWidget*, QWidget*)));
 
         int widget_num = group_layout_->count() - 1;
         if(use_compact_layout_) {
@@ -195,4 +200,29 @@ void GroupLaunchWidget::removeWidget(QWidget* w) {
     group_layout_compact_->removeWidget(w);
     emit launchWidgetRemoved(static_cast<LaunchWidget*>(w));
     w->deleteLater();
+}
+
+void GroupLaunchWidget::bubbleChangeWidgetPosition(QWidget* w_from, QWidget* w_to) {
+    int id_from = group_layout_->indexOf(w_from);
+    int id_to = group_layout_->indexOf(w_to);
+
+    if(id_from < 0 || id_to < 0)
+        return;
+
+    if(!use_compact_layout_) {
+        group_layout_compact_->removeWidget(w_from);
+        group_layout_compact_->insertWidget(id_to, w_from);
+
+        group_layout_->removeWidget(w_from);
+        group_layout_->insertWidget(id_to, w_from);
+    }
+    else {
+        group_layout_->removeWidget(w_from);
+        group_layout_->insertWidget(id_to, w_from);
+
+        group_layout_compact_->removeWidget(w_from);
+        group_layout_compact_->insertWidget(id_to, w_from);
+    }
+
+
 }

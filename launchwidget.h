@@ -14,6 +14,13 @@
 #include <QFileDialog>
 #include <QComboBox>
 #include <QTreeView>
+#include <QDrag>
+#include <QMimeData>
+#include <QMouseEvent>
+#include <QDragEnterEvent>
+#include <QDragLeaveEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
 #include <QGraphicsDropShadowEffect>
 #include "components/qtmaterialtextfield.h"
 #include "components/qtmaterialraisedbutton.h"
@@ -49,8 +56,8 @@ public:
 
     void setRoscoreWidget(RoscoreWidget *ptr = nullptr);
     QAbstractItemModel* getTableModel();
-    virtual void saveCurrentConfig(QSettings *settings, const QString &group, int index = 0) = 0;
-    virtual void loadConfig(QSettings *settings, const QString &group, int index = 0) = 0;
+    virtual void saveCurrentConfig(QSettings *settings, const QString &group, int index, int index_in_group) = 0;
+    virtual void loadConfig(QSettings *settings, const QString &group, int index, int &index_in_group) = 0;
     virtual void toggleCompactLayout();
 
 protected:
@@ -73,7 +80,14 @@ protected:
     bool isRoscoreOpened();
     virtual void generateLaunchProgramName();
 
-    bool use_compact_layout = false;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dragLeaveEvent(QDragLeaveEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
+
+    QPoint drag_start_pos_;
+    QColor color_befor_click_;
 
     // Widget
     QtMaterialCircularProgress *progress_open;

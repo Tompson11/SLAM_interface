@@ -41,8 +41,8 @@ class SensorWidget : public LaunchWidget
     Q_OBJECT
 public:
     explicit SensorWidget(QWidget *parent = nullptr, const SensorType &type = SensorType::LIDAR, const QString &sensor_name = "");
-    virtual void saveCurrentConfig(QSettings *settings, const QString &group, int index);
-    virtual void loadConfig(QSettings *settings, const QString &group, int index);
+    virtual void saveCurrentConfig(QSettings *settings, const QString &group, int index, int index_in_group);
+    virtual void loadConfig(QSettings *settings, const QString &group, int index, int &index_in_group);
     SensorType getSensorType();
 
 protected:

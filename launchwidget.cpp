@@ -74,6 +74,10 @@ void LaunchWidget::constructWidget() {
 
     auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
     process_launch = pool.getOneProcess();
+
+    this->setMaximumWidth(utils::getScreenSize().width() / 4);
+    this->setAcceptDrops(true);
+    this->label_title->setAcceptDrops(false);
 }
 
 void LaunchWidget::constructLayout() {
@@ -123,13 +127,62 @@ void LaunchWidget::connectSignal() {
     connect(process_launch, &QProcess::readyReadStandardError,this,&LaunchWidget::handleRoslaunchError);
 }
 
+void LaunchWidget::mousePressEvent(QMouseEvent *event) {
+    if(event->button() == Qt::LeftButton) {
+        drag_start_pos_ = event->pos();
+        color_befor_click_ = this->color();
+    }
+}
+
+void LaunchWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    if (!(event->buttons() & Qt::LeftButton))
+            return;
+    if ((event->pos() - drag_start_pos_).manhattanLength()
+         < QApplication::startDragDistance())
+            return;
+
+    this->setColor(QColor(255, 255, 255));
+
+    QDrag *drag = new QDrag(this);
+    QMimeData *data = new QMimeData();
+    data->setText(QString::number(reinterpret_cast<qulonglong>(this)));
+    drag->setMimeData(data);
+    drag->exec(Qt::MoveAction);
+
+    this->setColor(color_befor_click_);
+};
+
+void LaunchWidget::dragEnterEvent(QDragEnterEvent *event) {
+    if(event->mimeData()->hasText()) {
+        event->acceptProposedAction();
+
+        QWidget *drag_wid_ptr = reinterpret_cast<QWidget*>(event->mimeData()->text().toULongLong());
+        if(drag_wid_ptr == this)
+            return;
+
+        emit titleWidgetChangePosition(drag_wid_ptr, this);
+
+    }
+}
+
+void LaunchWidget::dragLeaveEvent(QDragLeaveEvent *event) {
+    event->accept();
+}
+
+void LaunchWidget::dropEvent(QDropEvent *event) {
+    event->acceptProposedAction();
+}
+
 void LaunchWidget::toggleCompactLayout() {
     use_compact_layout = !use_compact_layout;
 
     if(use_compact_layout) {
+        this->setMaximumWidth(utils::getScreenSize().width());
+
         body_frame->hide();
         button_log->show();
-        title_layout->addWidget(combo_topic, 0, 2, 1, 1);
+        title_layout->addWidget(combo_launch_items, 0, 2, 1, 1);
         title_layout->addWidget(button_config, 0, 3, 1, 1, Qt::AlignCenter);
         title_layout->addWidget(button_log, 0, 4, 1, 1, Qt::AlignCenter);
         title_layout->setSpacing(10);
@@ -141,10 +194,12 @@ void LaunchWidget::toggleCompactLayout() {
         title_layout->setColumnStretch(5, 0);
     }
     else {
+        this->setMaximumWidth(utils::getScreenSize().width() / 4);
+
         body_frame->show();
         button_log->hide();
         body_layout->addWidget(button_config, 2, 0 ,1, 1);
-        body_layout->addWidget(combo_topic, 1, 2, 1, 1);
+        body_layout->addWidget(combo_launch_items, 0, 2, 1, 1);
         title_layout->setColumnStretch(0, 0);
         title_layout->setColumnStretch(1, 1);
         title_layout->setColumnStretch(2, 0);
