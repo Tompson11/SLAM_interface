@@ -56,6 +56,7 @@ QStringList getSystemProcessID(QProcess *p_bash, const QString &p_name, const QS
     QStringList arguments;
     if(ppid.isEmpty())
         cmd = "ps -aef | grep " + p_name + " | grep -v grep | grep -v bash | awk '{print $2}'";
+//        cmd = "ps -aef | grep '" + p_name + "' | grep -v grep | awk '{print $2}'";
     else
         cmd = "ps -aef | grep " + p_name + " | grep -v grep | grep -v bash | grep "  + ppid + " | awk '{print $2}'";
 

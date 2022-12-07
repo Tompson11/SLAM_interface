@@ -54,6 +54,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     sensor_widget_array.resize(5);
 
+    cmd_group_widget = new GroupCmdWidget(this);
+
     loadConfig(default_setting_name);
 
 //    QHBoxLayout *sensor_layout = new QHBoxLayout();
@@ -138,6 +140,7 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(label_name_tool_group, 3, 0, 1, 3);
     layout->addWidget(scroll_area_tool_group, 4, 0, 1, 3);
     layout->addWidget(label_placehold, 5, 0, 1, 3);
+    layout->addWidget(cmd_group_widget, 5, 0, 1, 3);
     layout->setRowStretch(0, 0);
     layout->setRowStretch(1, 0);
     layout->setRowStretch(2, 0);
@@ -260,6 +263,7 @@ void MainWindow::loadConfig(const QString &setting_name) {
             tool_group_widget->appendWidget(it.second);
         }
 
+        cmd_group_widget->loadConfig(settings, "COMMAND");
 
     //    lidar_widget = new SensorWidget(this, SensorType::LIDAR);
     //    lidar_widget->setRoscoreWidget(roscore_widget);
@@ -331,10 +335,7 @@ void MainWindow::saveCurrentConfig() {
         }
     }
 
-//        lidar_widget->saveCurrentConfig(settings, "LIDAR");
-//        camera_widget->saveCurrentConfig(settings, "CAMERA");
-//        imu_widget->saveCurrentConfig(settings, "IMU");
-//        slam_widget->saveCurrentConfig(settings, "SLAM");
+    cmd_group_widget->saveCurrentConfig(settings, "COMMAND");
 
     delete settings;
 
@@ -404,9 +405,19 @@ void MainWindow::onSaveAsConfigClicked() {
 void MainWindow::onToggled(bool tog) {
     use_compact_layout = !use_compact_layout;
 
+    if(use_compact_layout) {
+        layout->addWidget(cmd_group_widget, 0, 4, 5, 1);
+    }
+    else {
+        layout->addWidget(cmd_group_widget, 5, 0, 1, 3);
+    }
+
     roscore_widget->toggleCompactLayout();
     sensor_group_widget->toggleCompactLayout();
     tool_group_widget->toggleCompactLayout();
+
+    cmd_widget_bef_height = cmd_group_widget->size().height();
+    cmd_group_widget->toggleCompactLayout();
 
     for(int i = 0; i <= SensorType::TOOLS; i++) {
        for(SensorWidget* wid : sensor_widget_array[i]) {
@@ -439,7 +450,7 @@ void MainWindow::modifyGroupLaunchWidgetSize() {
         scroll_area_tool_group->setMaximumHeight(std::min(tool_group_widget->getCompactHeight(), max_group_launch_widget_height));
         int aft_height2 = scroll_area_tool_group->height();
 
-        int height_change = (aft_height0 + aft_height1 + aft_height2) - (bef_height0 + bef_height1 + bef_height2);
+        int height_change = (aft_height0 + aft_height1 + aft_height2) - (bef_height0 + bef_height1 + bef_height2 + cmd_widget_bef_height / 6);
         if(height_change < 0) {
             this->resize(this->width(), this->height() + height_change);
         }

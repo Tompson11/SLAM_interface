@@ -12,6 +12,7 @@
 #include <QAction>
 #include <QScreen>
 #include "grouplaunchwidget.h"
+#include "groupcmdwidget.h"
 #include "components/qtmaterialtoggle.h"
 #include "components/qtmaterialscrollbar.h"
 
@@ -58,6 +59,9 @@ private:
 
     GroupLaunchWidget *sensor_group_widget;
     GroupLaunchWidget *tool_group_widget;
+
+    GroupCmdWidget *cmd_group_widget;
+    int cmd_widget_bef_height;
 
     QScrollArea *scroll_area_sensor_group;
     QScrollArea *scroll_area_tool_group;

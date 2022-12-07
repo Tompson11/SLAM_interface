@@ -10,6 +10,8 @@ CONFIG += c++11
 
 SOURCES += \
     clickablebadge.cpp \
+    cmddelegate.cpp \
+    cmdwidget.cpp \
     components/lib/qtmaterialcheckable.cpp \
     components/lib/qtmaterialcheckable_internal.cpp \
     components/lib/qtmaterialoverlaywidget.cpp \
@@ -44,6 +46,7 @@ SOURCES += \
     errorbadgewidget.cpp \
     filedelegate.cpp \
     focusincombobox.cpp \
+    groupcmdwidget.cpp \
     grouplaunchwidget.cpp \
     launchconfigdialog.cpp \
     launchfilereader.cpp \
@@ -64,6 +67,8 @@ SOURCES += \
 
 HEADERS += \
     clickablebadge.h \
+    cmddelegate.h \
+    cmdwidget.h \
     components/lib/qtmaterialcheckable.h \
     components/lib/qtmaterialcheckable_internal.h \
     components/lib/qtmaterialcheckable_p.h \
@@ -116,6 +121,7 @@ HEADERS += \
     errorbadgewidget.h \
     filedelegate.h \
     focusincombobox.h \
+    groupcmdwidget.h \
     grouplaunchwidget.h \
     launchconfigdialog.h \
     launchfilereader.h \
