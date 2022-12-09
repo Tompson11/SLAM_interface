@@ -8,6 +8,8 @@
 #include <QMouseEvent>
 #include <QGridLayout>
 #include <QLabel>
+#include <QDrag>
+#include <QMimeData>
 
 #include "utils/shellpool.h"
 #include "components/qtmaterialraisedbutton.h"
@@ -23,13 +25,26 @@ public:
     void setCmdCode(const QString &cmd);
     QString getCmdName();
     QString getCmdCode();
+    void prepareForChangingPosition();
+    void setColor(bool is_clicked);
+    void updateButtonCmdSize();
+
+    CmdWidget *getWidHoldMyData();
+
+    static void swapDisplay(CmdWidget *src, CmdWidget *target);
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event) override;
     virtual void enterEvent(QEvent *event) override;
     virtual void leaveEvent(QEvent *event) override;
 
+    virtual void mouseMoveEvent(QMouseEvent *event) override;
+    virtual void dragEnterEvent(QDragEnterEvent *event) override;
+    virtual void dragLeaveEvent(QDragLeaveEvent *event) override;
+    virtual void dropEvent(QDropEvent *event) override;
+
 private:
+
     QtMaterialRaisedButton *button_cmd_;
     QtMaterialRaisedButton *button_delete_;
 
@@ -47,16 +62,21 @@ private:
 
     QProcess *process_cmd_ = nullptr;
 
+    CmdWidget *wid_hold_my_data;
+    CmdWidget *wid_i_hold_its_data;
+
 signals:
     void resized(CmdWidget *);
     void deleted(CmdWidget *);
+    void cmdWidgetChangePosition(CmdWidget*, CmdWidget*);
+    void draged();
 
 protected slots:
     void onButtonCmdClicked();
     void onButtonDeleteClicked();
     void onButtonClearClicked();
     void onChecked(bool tog);
-
+    void onRenameReturned();
 };
 
 #endif // CMDWIDGET_H

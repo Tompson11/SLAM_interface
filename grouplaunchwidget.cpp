@@ -223,6 +223,4 @@ void GroupLaunchWidget::bubbleChangeWidgetPosition(QWidget* w_from, QWidget* w_t
         group_layout_compact_->removeWidget(w_from);
         group_layout_compact_->insertWidget(id_to, w_from);
     }
-
-
 }

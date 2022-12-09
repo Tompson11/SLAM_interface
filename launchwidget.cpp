@@ -130,7 +130,6 @@ void LaunchWidget::connectSignal() {
 void LaunchWidget::mousePressEvent(QMouseEvent *event) {
     if(event->button() == Qt::LeftButton) {
         drag_start_pos_ = event->pos();
-        color_befor_click_ = this->color();
     }
 }
 
@@ -142,6 +141,7 @@ void LaunchWidget::mouseMoveEvent(QMouseEvent *event)
          < QApplication::startDragDistance())
             return;
 
+    color_befor_click_ = this->color();
     this->setColor(QColor(255, 255, 255));
 
     QDrag *drag = new QDrag(this);

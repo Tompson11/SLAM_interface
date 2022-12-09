@@ -50,11 +50,23 @@ CmdWidget::CmdWidget(QWidget *parent) : QWidget(parent)
     connect(button_delete_, &QtMaterialRaisedButton::clicked, this, &CmdWidget::onButtonDeleteClicked);
     connect(button_clear_in_dialog_cmd_, &QtMaterialRaisedButton::clicked, this, &CmdWidget::onButtonClearClicked);
     connect(checkbox_in_dialog_cmd_, SIGNAL(toggled(bool)), this, SLOT(onChecked(bool)));
+    connect(lineedit_in_dialog_rename_, SIGNAL(returnPressed()), this, SLOT(onRenameReturned()));
+
+    this->setMouseTracking(true);
+    this->setAcceptDrops(true);
+}
+
+void CmdWidget::setColor(bool is_clicked) {
+    button_cmd_->setBackgroundColor(is_clicked ? "#00CCCC" : "#000000");
+}
+
+void CmdWidget::updateButtonCmdSize() {
+    button_cmd_->setMinimumWidth(button_cmd_->fontMetrics().width(button_cmd_->text()) + 6);
 }
 
 void CmdWidget::setCmdName(const QString &name) {
     button_cmd_->setText(name);
-    button_cmd_->setMinimumWidth(button_cmd_->fontMetrics().width(name) + 6);
+    updateButtonCmdSize();
 }
 
 void CmdWidget::setCmdCode(const QString &cmd) {
@@ -98,6 +110,45 @@ void CmdWidget::leaveEvent(QEvent *event) {
     button_delete_->hide();
 }
 
+void CmdWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    if (!(event->buttons() & Qt::LeftButton))
+            return;
+//    if (!button_cmd_->rect().contains(event->pos()))
+//            return;
+
+    emit draged();
+    this->setColor(true);
+
+    QDrag *drag = new QDrag(this);
+    QMimeData *data = new QMimeData();
+    data->setText(QString::number(reinterpret_cast<qulonglong>(this)));
+    drag->setMimeData(data);
+    drag->exec(Qt::MoveAction);
+
+    this->setColor(false);
+};
+
+void CmdWidget::dragEnterEvent(QDragEnterEvent *event) {
+    if(event->mimeData()->hasText()) {
+        event->acceptProposedAction();
+        this->setColor(true);
+
+        CmdWidget *drag_wid_ptr = reinterpret_cast<CmdWidget*>(event->mimeData()->text().toULongLong());
+        emit cmdWidgetChangePosition(drag_wid_ptr, this);
+    }
+}
+
+void CmdWidget::dragLeaveEvent(QDragLeaveEvent *event) {
+//    event->accept();
+    this->setColor(false);
+}
+
+void CmdWidget::dropEvent(QDropEvent *event) {
+    event->acceptProposedAction();
+    this->setColor(false);
+}
+
 void CmdWidget::onButtonCmdClicked() {
     QStringList arguments;
     QString cmd = textedit_in_dialog_cmd_->toPlainText();
@@ -129,3 +180,35 @@ void CmdWidget::onChecked(bool tog) {
         textedit_in_dialog_cmd_->setText(old_cmd.mid(0, old_cmd.size() - 4));
     }
 }
+
+void CmdWidget::onRenameReturned() {
+    dialog_rename_->close();
+}
+
+void CmdWidget::prepareForChangingPosition() {
+    wid_hold_my_data = this;
+    wid_i_hold_its_data = this;
+}
+
+CmdWidget *CmdWidget::getWidHoldMyData() {
+    return this->wid_hold_my_data;
+}
+
+void CmdWidget::swapDisplay(CmdWidget *src, CmdWidget *target) {
+    QString cmd_name = target->button_cmd_->text();
+    QString cmd_code = target->textedit_in_dialog_cmd_->toPlainText();
+    bool checked = target->checkbox_in_dialog_cmd_->isChecked();
+
+    target->button_cmd_->setText(src->button_cmd_->text());
+    target->checkbox_in_dialog_cmd_->setChecked(src->checkbox_in_dialog_cmd_->isChecked());
+    target->textedit_in_dialog_cmd_->setText(src->textedit_in_dialog_cmd_->toPlainText());
+
+    src->button_cmd_->setText(cmd_name);
+    src->checkbox_in_dialog_cmd_->setChecked(checked);
+    src->textedit_in_dialog_cmd_->setText(cmd_code);
+
+    std::swap(target->wid_i_hold_its_data, src->wid_i_hold_its_data);
+    src->wid_i_hold_its_data->wid_hold_my_data = src;
+    target->wid_i_hold_its_data->wid_hold_my_data = target;
+}
+

@@ -25,7 +25,7 @@ public:
     void toggleCompactLayout();
 
 private:
-    void addCmdWidget(const QString &cmd_name, const QString &cmd_code);
+    void addCmdWidget(CmdWidget *new_widget, int row = -1, const QString &cmd_name = "", const QString &cmd_code = "");
 
     QLabel *label_title_;
     QLabel *label_title_back_;
@@ -52,6 +52,8 @@ protected slots:
     void onButtonAddClicked();
     void onCmdWidgetResized(CmdWidget *cmd_wid);
     void onCmdWidgetDeleted(CmdWidget *cmd_wid);
+    void onCmdWidgetChangePosition(CmdWidget* w_from, CmdWidget* w_to);
+    void onCmdWidgetDraged();
 };
 
 #endif // GROUPCMDWIDGET_H

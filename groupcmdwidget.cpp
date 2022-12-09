@@ -70,14 +70,17 @@ void GroupCmdWidget::toggleCompactLayout() {
     }
 }
 
-void GroupCmdWidget::addCmdWidget(const QString &cmd_name, const QString &cmd_code) {
+void GroupCmdWidget::addCmdWidget(CmdWidget *new_widget, int row, const QString &cmd_name, const QString &cmd_code) {
     QListWidgetItem *item = new QListWidgetItem();
-    CmdWidget *new_widget = new CmdWidget();
-    new_widget->setCmdName(cmd_name);
-    new_widget->setCmdCode(cmd_code);
+
+    if(new_widget == nullptr) {
+        new_widget = new CmdWidget();
+        new_widget->setCmdName(cmd_name);
+        new_widget->setCmdCode(cmd_code);
+    }
 
     item->setSizeHint(new_widget->sizeHint());
-    list_widget_->insertItem(list_widget_->model()->rowCount() - 1, item);
+    list_widget_->insertItem(row < 0 ? list_widget_->model()->rowCount() - 1 : row, item);
     list_widget_->setItemWidget(item, new_widget);
 
     m_cmd_to_list_.emplace(new_widget, item);
@@ -85,11 +88,13 @@ void GroupCmdWidget::addCmdWidget(const QString &cmd_name, const QString &cmd_co
 
     connect(new_widget, SIGNAL(resized(CmdWidget*)), this, SLOT(onCmdWidgetResized(CmdWidget*)));
     connect(new_widget, SIGNAL(deleted(CmdWidget*)), this, SLOT(onCmdWidgetDeleted(CmdWidget*)));
+    connect(new_widget, SIGNAL(cmdWidgetChangePosition(CmdWidget*, CmdWidget*)), this, SLOT(onCmdWidgetChangePosition(CmdWidget*, CmdWidget*)));
+    connect(new_widget, SIGNAL(draged()), this, SLOT(onCmdWidgetDraged()));
 }
 
 
 void GroupCmdWidget::onButtonAddClicked() {
-    addCmdWidget("", "");
+    addCmdWidget(nullptr);
 }
 
 void GroupCmdWidget::onCmdWidgetResized(CmdWidget *cmd_wid) {
@@ -104,6 +109,51 @@ void GroupCmdWidget::onCmdWidgetDeleted(CmdWidget *cmd_wid) {
 
     m_cmd_to_list_.erase(cmd_wid);
     cmd_wid->deleteLater();
+}
+
+void GroupCmdWidget::onCmdWidgetDraged() {
+    for(auto &it : m_cmd_to_list_) {
+        it.first->prepareForChangingPosition();
+    }
+}
+
+void GroupCmdWidget::onCmdWidgetChangePosition(CmdWidget* w_from, CmdWidget* w_to) {
+    QListWidgetItem *list_wid_from = m_cmd_to_list_[w_from];
+    QListWidgetItem *list_wid_to = m_cmd_to_list_[w_to];
+
+    int id_from = list_widget_->row(list_wid_from);
+    int id_to = list_widget_->row(list_wid_to);
+
+    if(id_from < 0 || id_to < 0)
+        return;
+
+    int id_start = id_from;
+    while(id_from < id_to) {
+        CmdWidget *wid_front = static_cast<CmdWidget *>(list_widget_->itemWidget(list_widget_->item(id_from)));
+        CmdWidget *wid_back = static_cast<CmdWidget *>(list_widget_->itemWidget(list_widget_->item(id_from + 1)));
+        CmdWidget::swapDisplay(wid_front, wid_back->getWidHoldMyData());
+        ++id_from;
+    }
+
+    while(id_from > id_to) {
+        CmdWidget *wid_back = static_cast<CmdWidget *>(list_widget_->itemWidget(list_widget_->item(id_from)));
+        CmdWidget *wid_front = static_cast<CmdWidget *>(list_widget_->itemWidget(list_widget_->item(id_from - 1)));
+        CmdWidget::swapDisplay(wid_back, wid_front->getWidHoldMyData());
+        --id_from;
+    }
+
+    CmdWidget::swapDisplay(w_to, w_from->getWidHoldMyData());
+
+    for(int i = 0; i < list_widget_->count() - 1; i++) {
+        CmdWidget *cmd_wid = static_cast<CmdWidget *>(list_widget_->itemWidget(list_widget_->item(i)));
+        cmd_wid->updateButtonCmdSize();
+        m_cmd_to_list_[cmd_wid]->setSizeHint(cmd_wid->sizeHint());
+    }
+
+    list_widget_->setFrameShape(QFrame::NoFrame);
+    list_widget_->setFrameShape(QFrame::Box);
+
+
 }
 
 void GroupCmdWidget::saveCurrentConfig(QSettings *settings, const QString &group) {
@@ -129,7 +179,7 @@ void GroupCmdWidget::loadConfig(QSettings *settings, const QString &group) {
         int size = settings->beginReadArray("CMD");
         for(int i = 0; i < size; i++) {
             settings->setArrayIndex(i);
-            addCmdWidget(settings->value("NAME").toString(), settings->value("CODE").toString());
+            addCmdWidget(nullptr, i, settings->value("NAME").toString(), settings->value("CODE").toString());
         }
 
         settings->endArray();
