@@ -86,6 +86,8 @@ protected:
     void dragLeaveEvent(QDragLeaveEvent *event) override;
     void dropEvent(QDropEvent *event) override;
 
+    const int minimum_width = 350;
+
     QPoint drag_start_pos_;
     QColor color_befor_click_;
 

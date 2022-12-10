@@ -14,6 +14,7 @@
 
 #include "cmddelegate.h"
 #include "cmdwidget.h"
+#include "components/qtmaterialscrollbar.h"
 
 class GroupCmdWidget : public QWidget
 {
@@ -31,6 +32,9 @@ private:
     QLabel *label_title_back_;
 
     QListWidget *list_widget_;
+
+    QtMaterialScrollBar *scrollbar_hor_for_list_widget;
+    QtMaterialScrollBar *scrollbar_vert_for_list_widget;
 
     QStandardItemModel *model_;
     QItemSelectionModel *select_model_;

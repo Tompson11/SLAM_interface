@@ -69,6 +69,7 @@ void LaunchWidget::constructWidget() {
     drawer_param->setParent(this->parentWidget());
     drawer_param->setClickOutsideToClose(true);
     drawer_param->setOverlayMode(true);
+//    drawer_param->setDrawerWidth(900);
 
     tree_param = new QTreeView();
 
@@ -76,6 +77,7 @@ void LaunchWidget::constructWidget() {
     process_launch = pool.getOneProcess();
 
     this->setMaximumWidth(utils::getScreenSize().width() / 4);
+    this->setMinimumWidth(minimum_width);
     this->setAcceptDrops(true);
     this->label_title->setAcceptDrops(false);
 }
@@ -785,5 +787,5 @@ void LaunchWidget::onButtonRemoveClicked() {
             return;
     }
 
-    this->prepareDisappearAnimation(30);
+    this->prepareDisappearAnimation(20);
 }

@@ -12,6 +12,7 @@ RoscoreWidget::RoscoreWidget(QWidget *parent) :
     TitleWidget(parent, QColor(214, 219, 223), QColor(131, 145, 146))
 {
     this->state = INITIALIZATION;
+    this->setMinimumWidth(600);
 
     label_title->setText("ROSCORE");
     label_toggle_back->setFixedWidth(100);

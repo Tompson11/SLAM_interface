@@ -73,7 +73,13 @@ bool LaunchFileReader::read(const QString &base_ns, QString &err_msg) {
             pReader_->readNext();
         }
         else {
-            pReader_->readNext();
+            if(pReader_->isEndElement() && ( (pReader_->name() == "node") || (pReader_->name() == "group"))) {
+                pReader_->readNext();
+                break;
+            }
+            else {
+                pReader_->readNext();
+            }
         }
     }
 

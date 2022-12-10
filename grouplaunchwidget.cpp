@@ -5,6 +5,9 @@ GroupLaunchWidget::GroupLaunchWidget(QWidget *parent, const QString &group_name,
 {
     add_button_ = new QtMaterialRaisedButton(this);
     add_button_->setText("+");
+    add_button_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    label_placehold_ = new QLabel(this);
 
     main_layout_ = new QGridLayout();
     main_layout_->setMargin(0);
@@ -12,9 +15,11 @@ GroupLaunchWidget::GroupLaunchWidget(QWidget *parent, const QString &group_name,
 
     group_layout_ = new QHBoxLayout();
     group_layout_->addWidget(add_button_, 0, Qt::AlignVCenter);
+    group_layout_->addWidget(label_placehold_, 1);
 
     group_layout_compact_ = new QVBoxLayout();
     group_layout_compact_->addWidget(add_button_, 0, Qt::AlignTop);
+    group_layout_compact_->addWidget(label_placehold_, 1);
 
     main_layout_->addLayout(group_layout_, 1, 0, 1, 1);
     main_layout_->setRowStretch(0, 0);
@@ -107,7 +112,7 @@ void GroupLaunchWidget::appendWidget(LaunchWidget *wid) {
         connect(wid, SIGNAL(titleWidgetRemove(QWidget*)), this, SLOT(removeWidget(QWidget*)));
         connect(wid, SIGNAL(titleWidgetChangePosition(QWidget*, QWidget*)), this, SLOT(bubbleChangeWidgetPosition(QWidget*, QWidget*)));
 
-        int widget_num = group_layout_->count() - 1;
+        int widget_num = group_layout_->count() - 2;
         if(use_compact_layout_) {
             wid->toggleCompactLayout();
             group_layout_->insertWidget(widget_num, wid, 1);
@@ -123,7 +128,7 @@ void GroupLaunchWidget::appendWidget(LaunchWidget *wid) {
 }
 
 void GroupLaunchWidget::clearWidgets() {
-    while(group_layout_->count() > 1) {
+    while(group_layout_->count() > 2) {
         QWidget *wid = group_layout_->itemAt(0)->widget();
         group_layout_->removeWidget(wid);
         group_layout_compact_->removeWidget(wid);
@@ -131,8 +136,12 @@ void GroupLaunchWidget::clearWidgets() {
     }
 }
 
+int GroupLaunchWidget::getTheoryMinimumWidth() {
+    return 350 * (group_layout_->count() - 2) + 2 * group_layout_->spacing() * group_layout_->count() + 55 + 2 * group_layout_->margin();
+}
+
 int GroupLaunchWidget::getCompactHeight() {
-    return 66 * (group_layout_compact_->count() - 1) + 2 * group_layout_compact_->spacing() * group_layout_compact_->count() + add_button_->height() + 2 * group_layout_compact_->margin();
+    return 66 * (group_layout_compact_->count() - 2) + 2 * group_layout_compact_->spacing() * group_layout_compact_->count() + 55 + 2 * group_layout_compact_->margin();
 }
 
 void GroupLaunchWidget::onButtonAddClicked() {
@@ -200,6 +209,7 @@ void GroupLaunchWidget::removeWidget(QWidget* w) {
     group_layout_compact_->removeWidget(w);
     emit launchWidgetRemoved(static_cast<LaunchWidget*>(w));
     w->deleteLater();
+
 }
 
 void GroupLaunchWidget::bubbleChangeWidgetPosition(QWidget* w_from, QWidget* w_to) {

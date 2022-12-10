@@ -21,6 +21,16 @@ GroupCmdWidget::GroupCmdWidget(QWidget *parent) : QWidget(parent)
     list_widget_->setViewMode(QListView::IconMode);
     list_widget_->setSelectionMode(QAbstractItemView::NoSelection);
 
+    scrollbar_vert_for_list_widget = new QtMaterialScrollBar();
+    scrollbar_vert_for_list_widget->setOrientation(Qt::Vertical);
+    scrollbar_hor_for_list_widget = new QtMaterialScrollBar();
+    scrollbar_hor_for_list_widget->setOrientation(Qt::Horizontal);
+
+    list_widget_->setHorizontalScrollBar(scrollbar_hor_for_list_widget);
+    list_widget_->setVerticalScrollBar(scrollbar_vert_for_list_widget);
+    list_widget_->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    list_widget_->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+
     button_add_ = new QtMaterialRaisedButton(this);
     button_add_->setBackgroundColor(QtMaterialStyle::instance().themeColor("accent1"));
     button_add_->setText("+");
@@ -51,6 +61,8 @@ GroupCmdWidget::GroupCmdWidget(QWidget *parent) : QWidget(parent)
     layout_main_ = new QGridLayout();
     layout_main_->addWidget(frame_);
     this->setLayout(layout_main_);
+
+    this->setMinimumHeight(85);
 
     connect(button_add_, &QtMaterialRaisedButton::clicked, this, &GroupCmdWidget::onButtonAddClicked);
 }

@@ -32,12 +32,14 @@ public:
 private:
     void saveCurrentConfig();
     void loadConfig(const QString &setting_name);
-    void modifyGroupLaunchWidgetSize();
 
     Ui::MainWindow *ui;
 
+    QWidget *mainwidget;
+
     QRect screen_size;
     int max_group_launch_widget_height;
+    int min_group_launch_widget_compact_width;
     bool use_compact_layout = false;
 
     QMenuBar *main_menu;
@@ -56,6 +58,7 @@ private:
 
     QLabel *label_name_sensor_group;
     QLabel *label_name_tool_group;
+    QLabel *label_placehold;
 
     GroupLaunchWidget *sensor_group_widget;
     GroupLaunchWidget *tool_group_widget;
@@ -71,15 +74,19 @@ private:
     QtMaterialScrollBar *scrollbar_tool_group_hori;
     QtMaterialScrollBar *scrollbar_tool_group_vert;
 
+    bool add_shadow = true;
+    QScrollArea *shadow_area_roscore;
+    QScrollArea *shadow_area_sensor;
+    QScrollArea *shadow_area_tool;
+    QScrollArea *shadow_area_cmd;
+
+
     QGridLayout *layout;
+
+    QTimer *timer;
 
     std::vector<std::unordered_set<SensorWidget*>> sensor_widget_array;
     std::unordered_set<SlamWidget*> slam_widget_array;
-
-    SensorWidget *camera_widget;
-    SensorWidget *lidar_widget;
-    SensorWidget *imu_widget;
-    SlamWidget *slam_widget;
 
     QString default_setting_path;
     QString default_setting_name;
@@ -92,5 +99,8 @@ protected slots:
     void onOpenConfigClicked();
     void onSaveAsConfigClicked();
     void onToggled(bool tog);
+    void onTimeOut();
+    void modifyGroupLaunchWidgetSize();
+
 };
 #endif // MAINWINDOW_H

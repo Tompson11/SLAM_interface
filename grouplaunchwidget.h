@@ -26,6 +26,7 @@ public:
     void clearWidgets();
     void toggleCompactLayout();
     int getCompactHeight();
+    int getTheoryMinimumWidth();
 
 protected:
     QGridLayout *main_layout_;
@@ -33,6 +34,7 @@ protected:
     QVBoxLayout *group_layout_compact_;
 
     QtMaterialRaisedButton *add_button_;
+    QLabel *label_placehold_;
 
     QDialog *dialog_;
     QGridLayout *layout_dialog_;

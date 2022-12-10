@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     screen_size = utils::getScreenSize();
     max_group_launch_widget_height = screen_size.height() * 0.35;
+    min_group_launch_widget_compact_width = 600;
 
     main_menu = new QMenuBar(this);
     menu_file = new QMenu("&File", this);
@@ -58,14 +59,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     loadConfig(default_setting_name);
 
-//    QHBoxLayout *sensor_layout = new QHBoxLayout();
-//    sensor_layout->addWidget(lidar_widget, Qt::AlignLeft);
-//    sensor_layout->addWidget(camera_widget, Qt::AlignLeft);
-//    sensor_layout->addWidget(imu_widget, Qt::AlignLeft);
-//    sensor_layout->addWidget(w1, Qt::AlignLeft);
-//    sensor_layout->addWidget(w2, 0, Qt::AlignLeft);
-//    sensor_layout->addWidget(w3, 0, Qt::AlignLeft);
-
     scrollbar_sensor_group_hori = new QtMaterialScrollBar();
     scrollbar_sensor_group_hori->setOrientation(Qt::Horizontal);
     scrollbar_sensor_group_vert = new QtMaterialScrollBar();
@@ -101,7 +94,7 @@ MainWindow::MainWindow(QWidget *parent)
     scroll_area_tool_group->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::MinimumExpanding);
 
     label_name_sensor_group = new QLabel(this);
-    label_name_sensor_group->setText("Sensors");
+    label_name_sensor_group->setText(" Sensors");
     label_name_sensor_group->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     label_name_sensor_group->setStyleSheet("background:transparent;border-width:0;border-style:outset;"
                                "font-size: 25px;"
@@ -110,7 +103,7 @@ MainWindow::MainWindow(QWidget *parent)
                                );
 
     label_name_tool_group = new QLabel(this);
-    label_name_tool_group->setText("SLAM & Tools");
+    label_name_tool_group->setText(" SLAM & Tools");
     label_name_tool_group->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     label_name_tool_group->setStyleSheet("background:transparent;border-width:0;border-style:outset;"
                                "font-size: 25px;"
@@ -118,7 +111,7 @@ MainWindow::MainWindow(QWidget *parent)
                                "color: #FF6633;"
                                );
 
-    QWidget *mainwidget = new QWidget(this);
+    mainwidget = new QWidget(this);
 //    QVBoxLayout *layout = new QVBoxLayout(mainwidget);
 //    layout->addWidget(roscore_widget, Qt::AlignTop);
 ////    layout->addLayout(sensor_layout, Qt::AlignTop);
@@ -131,15 +124,41 @@ MainWindow::MainWindow(QWidget *parent)
     layout->setColumnStretch(1, 1);
     layout->setColumnStretch(2, 1);
 
-    QLabel *label_placehold = new QLabel(this);
-    layout->addWidget(roscore_widget, 0, 0, 1, 3);
+    bool add_shadow = true;
+    if(add_shadow) {
+        auto generateShadowArea = [this] () {
+            QScrollArea *shadow_area = new QScrollArea(this);
+            shadow_area->setWidgetResizable(true);
+//            shadow_area->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+            QGraphicsDropShadowEffect *shadow = new QGraphicsDropShadowEffect(this);
+            shadow->setOffset(0, 0);
+            shadow->setColor(QColor(38, 78, 119, 127));
+            shadow->setBlurRadius(30);
+            shadow_area->setGraphicsEffect(shadow);
+            return shadow_area;
+        };
+
+        shadow_area_roscore = generateShadowArea();
+        shadow_area_sensor = generateShadowArea();
+        shadow_area_tool = generateShadowArea();
+        shadow_area_cmd = generateShadowArea();
+
+        layout->addWidget(shadow_area_roscore, 0, 0, 1, 3);
+        layout->addWidget(shadow_area_sensor, 1, 0, 2, 3);
+        layout->addWidget(shadow_area_tool, 3, 0, 2, 3);
+        layout->addWidget(shadow_area_cmd, 5, 0, 1, 3);
+    }
+
+    label_placehold = new QLabel(this);
+    layout->addWidget(roscore_widget, 0, 0, 1, 3, Qt::AlignTop);
     layout->addWidget(label_name_sensor_group, 1, 0, 1, 1);
     layout->addWidget(label_compact, 1, 1, 1, 1, Qt::AlignRight);
     layout->addWidget(toggle_compact_layout, 1, 2, 1, 1);
     layout->addWidget(scroll_area_sensor_group, 2, 0, 1, 3);
-    layout->addWidget(label_name_tool_group, 3, 0, 1, 3);
+    layout->addWidget(label_name_tool_group, 3, 0, 1, 1);
     layout->addWidget(scroll_area_tool_group, 4, 0, 1, 3);
-    layout->addWidget(label_placehold, 5, 0, 1, 3);
+    layout->addWidget(label_placehold, 5, 0, 1, 3, Qt::AlignTop);
     layout->addWidget(cmd_group_widget, 5, 0, 1, 3);
     layout->setRowStretch(0, 0);
     layout->setRowStretch(1, 0);
@@ -147,9 +166,14 @@ MainWindow::MainWindow(QWidget *parent)
     layout->setRowStretch(3, 0);
     layout->setRowStretch(4, 0);
     layout->setRowStretch(5, 1);
+    layout->setSpacing(10);
 
     mainwidget->setLayout(layout);
     setCentralWidget(mainwidget);
+
+    timer = new QTimer;
+    timer->setSingleShot(true);
+    connect(timer, &QTimer::timeout, this, &MainWindow::onTimeOut);
 
     connect(toggle_compact_layout, SIGNAL(toggled(bool)), this, SLOT(onToggled(bool)));
     connect(sensor_group_widget, SIGNAL(launchWidgetAdded(LaunchWidget*)), this, SLOT(onNewLaunchWidgetAdded(LaunchWidget*)));
@@ -160,7 +184,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(action_open_config ,SIGNAL(triggered()),this,SLOT(onOpenConfigClicked()));
     connect(action_save_config ,&QAction::triggered,this, &MainWindow::saveCurrentConfig);
     connect(action_saveas_config ,SIGNAL(triggered()),this,SLOT(onSaveAsConfigClicked()));
-//    connect(button_remove, &QtMaterialRaisedButton::clicked, this, &TitleWidget::onButtonRemoveClicked);
+
+
+    int init_window_wid = std::max(sensor_group_widget->width(), tool_group_widget->width());
+    this->resize(init_window_wid + 40, 0);
 }
 
 MainWindow::~MainWindow()
@@ -264,27 +291,6 @@ void MainWindow::loadConfig(const QString &setting_name) {
         }
 
         cmd_group_widget->loadConfig(settings, "COMMAND");
-
-    //    lidar_widget = new SensorWidget(this, SensorType::LIDAR);
-    //    lidar_widget->setRoscoreWidget(roscore_widget);
-    //    lidar_widget->loadConfig(settings, "LIDAR");
-
-    //    camera_widget = new SensorWidget(this, SensorType::CAMERA);
-    //    camera_widget->setRoscoreWidget(roscore_widget);
-    //    camera_widget->loadConfig(settings, "CAMERA");
-
-    //    imu_widget = new SensorWidget(this, SensorType::IMU);
-    //    imu_widget->setRoscoreWidget(roscore_widget);
-    //    imu_widget->loadConfig(settings, "IMU");
-
-    //    slam_widget = new SlamWidget(this);
-    //    slam_widget->setRoscoreWidget(roscore_widget);
-    //    slam_widget->loadConfig(settings, "SLAM");
-    //    slam_widget->setLidarWidget(lidar_widget);
-    //    slam_widget->setCameraWidget(camera_widget);
-    //    slam_widget->setImuWidget(imu_widget);
-    //    slam_widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
         delete settings;
     }
     else {
@@ -327,8 +333,8 @@ void MainWindow::saveCurrentConfig() {
        }
     }
 
+    int cnt = 0;
     for(SlamWidget* wid : slam_widget_array) {
-        int cnt = 0;
         if(wid) {
              wid->saveCurrentConfig(settings, DefaultSlamName, cnt, tool_group_widget->getWidgetIndex(wid));
              cnt++;
@@ -407,9 +413,13 @@ void MainWindow::onToggled(bool tog) {
 
     if(use_compact_layout) {
         layout->addWidget(cmd_group_widget, 0, 4, 5, 1);
+        if(add_shadow)
+            layout->addWidget(shadow_area_cmd, 0, 4, 5, 1);
     }
     else {
         layout->addWidget(cmd_group_widget, 5, 0, 1, 3);
+        if(add_shadow)
+            layout->addWidget(shadow_area_cmd, 5, 0, 1, 3);
     }
 
     roscore_widget->toggleCompactLayout();
@@ -438,34 +448,57 @@ void MainWindow::onToggled(bool tog) {
 
 void MainWindow::modifyGroupLaunchWidgetSize() {
     if(use_compact_layout) {
-        int bef_height0 = scroll_area_sensor_group->height();
-        roscore_widget->setMaximumHeight(roscore_widget->getCompactHeight());
-        int aft_height0 = scroll_area_sensor_group->height();
+        scroll_area_sensor_group->setMinimumWidth(min_group_launch_widget_compact_width);
+        scroll_area_tool_group->setMinimumWidth(min_group_launch_widget_compact_width);
 
-        int bef_height1 = scroll_area_sensor_group->height();
-        scroll_area_sensor_group->setMaximumHeight(std::min(sensor_group_widget->getCompactHeight(), max_group_launch_widget_height));
-        int aft_height1 = scroll_area_sensor_group->height();
+        int target_height0 = std::min(roscore_widget->getCompactHeight(), max_group_launch_widget_height);
+        roscore_widget->setMaximumHeight(target_height0);
+        if(add_shadow)
+            shadow_area_roscore->setMaximumHeight(target_height0);
 
-        int bef_height2 = scroll_area_tool_group->height();
-        scroll_area_tool_group->setMaximumHeight(std::min(tool_group_widget->getCompactHeight(), max_group_launch_widget_height));
-        int aft_height2 = scroll_area_tool_group->height();
+        int target_height1 = std::min(sensor_group_widget->getCompactHeight(), max_group_launch_widget_height);
+        scroll_area_sensor_group->setMaximumHeight(target_height1);
 
-        int height_change = (aft_height0 + aft_height1 + aft_height2) - (bef_height0 + bef_height1 + bef_height2 + cmd_widget_bef_height / 6);
-        if(height_change < 0) {
-            this->resize(this->width(), this->height() + height_change);
-        }
+        int target_height2 = std::min(tool_group_widget->getCompactHeight(), max_group_launch_widget_height);
+        scroll_area_tool_group->setMaximumHeight(target_height2);
 
+        label_placehold->setMaximumHeight(0);
         layout->setRowStretch(2, 1);
         layout->setRowStretch(4, 1);
         layout->setRowStretch(5, 0);
+
+        timer->start(10);
     }
     else {
         roscore_widget->setMaximumHeight(max_group_launch_widget_height);
+        if(add_shadow)
+            shadow_area_roscore->setMaximumHeight(max_group_launch_widget_height);
+
         scroll_area_sensor_group->setMaximumHeight(max_group_launch_widget_height);
         scroll_area_tool_group->setMaximumHeight(max_group_launch_widget_height);
 
         layout->setRowStretch(2, 0);
         layout->setRowStretch(4, 0);
         layout->setRowStretch(5, 1);
+
+        timer->start(10);
+    }
+}
+
+void MainWindow::onTimeOut() {
+    if(this->windowState() == Qt::WindowMaximized)
+        return;
+
+    if(use_compact_layout) {
+        this->resize(this->width(), std::min(sensor_group_widget->getCompactHeight(), max_group_launch_widget_height)
+                                   + std::min(tool_group_widget->getCompactHeight(), max_group_launch_widget_height)
+                                   + label_name_sensor_group->height() * 3
+                                   + roscore_widget->getCompactHeight()
+                                   + 6 * layout->spacing()
+                                   + 2 * layout->margin()
+                                   + main_menu->height());
+    }
+    else {
+        this->resize(std::max(sensor_group_widget->getTheoryMinimumWidth(), tool_group_widget->getTheoryMinimumWidth()), this->height());
     }
 }
