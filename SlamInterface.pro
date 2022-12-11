@@ -9,9 +9,6 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    clickablebadge.cpp \
-    cmddelegate.cpp \
-    cmdwidget.cpp \
     components/lib/qtmaterialcheckable.cpp \
     components/lib/qtmaterialcheckable_internal.cpp \
     components/lib/qtmaterialoverlaywidget.cpp \
@@ -43,32 +40,32 @@ SOURCES += \
     components/qtmaterialtextfield_internal.cpp \
     components/qtmaterialtoggle.cpp \
     components/qtmaterialtoggle_internal.cpp \
-    errorbadgewidget.cpp \
-    filedelegate.cpp \
-    focusincombobox.cpp \
-    groupcmdwidget.cpp \
-    grouplaunchwidget.cpp \
-    launchconfigdialog.cpp \
-    launchfilereader.cpp \
-    launchparamdelegate.cpp \
-    launchtableview.cpp \
-    launchwidget.cpp \
-    main.cpp \
-    mainwindow.cpp \
-    roscorewidget.cpp \
-    sensorgrouplaunchwidget.cpp \
-    sensorlaunchtableview.cpp \
-    sensorwidget.cpp \
-    slamlaunchtableview.cpp \
-    slamwidget.cpp \
-    titlewidget.cpp \
     utils/reg.cpp \
-    utils/sys.cpp
+    utils/sys.cpp \
+    main.cpp \
+    widget/clickablebadge.cpp \
+    widget/cmddelegate.cpp \
+    widget/cmdwidget.cpp \
+    widget/errorbadgewidget.cpp \
+    widget/filedelegate.cpp \
+    widget/focusincombobox.cpp \
+    widget/groupcmdwidget.cpp \
+    widget/grouplaunchwidget.cpp \
+    widget/launchconfigdialog.cpp \
+    widget/launchfilereader.cpp \
+    widget/launchparamdelegate.cpp \
+    widget/launchtableview.cpp \
+    widget/launchwidget.cpp \
+    widget/mainwindow.cpp \
+    widget/roscorewidget.cpp \
+    widget/sensorgrouplaunchwidget.cpp \
+    widget/sensorlaunchtableview.cpp \
+    widget/sensorwidget.cpp \
+    widget/slamlaunchtableview.cpp \
+    widget/slamwidget.cpp \
+    widget/titlewidget.cpp
 
 HEADERS += \
-    clickablebadge.h \
-    cmddelegate.h \
-    cmdwidget.h \
     components/lib/qtmaterialcheckable.h \
     components/lib/qtmaterialcheckable_internal.h \
     components/lib/qtmaterialcheckable_p.h \
@@ -118,30 +115,33 @@ HEADERS += \
     components/qtmaterialtoggle.h \
     components/qtmaterialtoggle_internal.h \
     components/qtmaterialtoggle_p.h \
-    errorbadgewidget.h \
-    filedelegate.h \
-    focusincombobox.h \
-    groupcmdwidget.h \
-    grouplaunchwidget.h \
-    launchconfigdialog.h \
-    launchfilereader.h \
-    launchparamdelegate.h \
-    launchtableview.h \
-    launchwidget.h \
-    mainwindow.h \
-    roscorewidget.h \
-    sensorgrouplaunchwidget.h \
-    sensorlaunchtableview.h \
-    sensorwidget.h \
-    slamlaunchtableview.h \
-    slamwidget.h \
-    titlewidget.h \
     utils/reg.h \
     utils/shellpool.h \
-    utils/sys.h
+    utils/sys.h \
+    widget/clickablebadge.h \
+    widget/cmddelegate.h \
+    widget/cmdwidget.h \
+    widget/errorbadgewidget.h \
+    widget/filedelegate.h \
+    widget/focusincombobox.h \
+    widget/groupcmdwidget.h \
+    widget/grouplaunchwidget.h \
+    widget/launchconfigdialog.h \
+    widget/launchfilereader.h \
+    widget/launchparamdelegate.h \
+    widget/launchtableview.h \
+    widget/launchwidget.h \
+    widget/mainwindow.h \
+    widget/roscorewidget.h \
+    widget/sensorgrouplaunchwidget.h \
+    widget/sensorlaunchtableview.h \
+    widget/sensorwidget.h \
+    widget/slamlaunchtableview.h \
+    widget/slamwidget.h \
+    widget/titlewidget.h
 
 FORMS += \
-    mainwindow.ui
+    widget/mainwindow.ui
 
 TRANSLATIONS += \
     SlamInterface_zh_CN.ts
