@@ -24,6 +24,7 @@ public:
     void saveCurrentConfig(QSettings *settings, const QString &group);
     void loadConfig(QSettings *settings, const QString &group);
     void toggleCompactLayout();
+    void refreshDisplay();
 
 private:
     void addCmdWidget(CmdWidget *new_widget, int row = -1, const QString &cmd_name = "", const QString &cmd_code = "");
@@ -44,8 +45,8 @@ private:
     QGridLayout *layout_;
     QGridLayout *layout_main_;
 
+    QFrame *button_frame_;
     QtMaterialRaisedButton *button_add_;
-    QtMaterialRaisedButton *button_test_;
 
     bool use_compact_layout_ = false;
 

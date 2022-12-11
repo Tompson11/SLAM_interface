@@ -26,7 +26,7 @@ RoscoreWidget::RoscoreWidget(QWidget *parent) :
     button_dialog = new QtMaterialRaisedButton(this);
     button_dialog->setText("browse");
 
-    dialog_file = new QFileDialog(this);
+    dialog_file = new QFileDialog();
     dialog_file->setWindowTitle("Choose Source Directory");
     dialog_file->setFileMode( QFileDialog::DirectoryOnly );
 

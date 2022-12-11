@@ -32,6 +32,7 @@ public:
 private:
     void saveCurrentConfig();
     void loadConfig(const QString &setting_name);
+    void modifyGroupLaunchWidgetSize();
 
     Ui::MainWindow *ui;
 
@@ -83,7 +84,8 @@ private:
 
     QGridLayout *layout;
 
-    QTimer *timer;
+    QTimer *timer_resize_main_window;
+    QTimer *timer_refresh_cmd_widget;
 
     std::vector<std::unordered_set<SensorWidget*>> sensor_widget_array;
     std::unordered_set<SlamWidget*> slam_widget_array;
@@ -99,8 +101,9 @@ protected slots:
     void onOpenConfigClicked();
     void onSaveAsConfigClicked();
     void onToggled(bool tog);
-    void onTimeOut();
-    void modifyGroupLaunchWidgetSize();
+    void onResizeMainWindow();
+    void onRefreshCmdWidget();
+
 
 };
 #endif // MAINWINDOW_H

@@ -171,9 +171,13 @@ MainWindow::MainWindow(QWidget *parent)
     mainwidget->setLayout(layout);
     setCentralWidget(mainwidget);
 
-    timer = new QTimer;
-    timer->setSingleShot(true);
-    connect(timer, &QTimer::timeout, this, &MainWindow::onTimeOut);
+    timer_resize_main_window = new QTimer;
+    timer_resize_main_window->setSingleShot(true);
+    connect(timer_resize_main_window, &QTimer::timeout, this, &MainWindow::onResizeMainWindow);
+
+    timer_refresh_cmd_widget = new QTimer;
+    timer_refresh_cmd_widget->setSingleShot(true);
+    connect(timer_refresh_cmd_widget, &QTimer::timeout, this, &MainWindow::onRefreshCmdWidget);
 
     connect(toggle_compact_layout, SIGNAL(toggled(bool)), this, SLOT(onToggled(bool)));
     connect(sensor_group_widget, SIGNAL(launchWidgetAdded(LaunchWidget*)), this, SLOT(onNewLaunchWidgetAdded(LaunchWidget*)));
@@ -466,8 +470,10 @@ void MainWindow::modifyGroupLaunchWidgetSize() {
         layout->setRowStretch(2, 1);
         layout->setRowStretch(4, 1);
         layout->setRowStretch(5, 0);
+        layout->setColumnStretch(1, 2);
+        layout->setColumnStretch(4, 1);
 
-        timer->start(10);
+        timer_resize_main_window->start(10);
     }
     else {
         roscore_widget->setMaximumHeight(max_group_launch_widget_height);
@@ -480,25 +486,31 @@ void MainWindow::modifyGroupLaunchWidgetSize() {
         layout->setRowStretch(2, 0);
         layout->setRowStretch(4, 0);
         layout->setRowStretch(5, 1);
+        layout->setColumnStretch(4, 0);
 
-        timer->start(10);
+        timer_resize_main_window->start(10);
     }
 }
 
-void MainWindow::onTimeOut() {
-    if(this->windowState() == Qt::WindowMaximized)
-        return;
+void MainWindow::onRefreshCmdWidget() {
+    cmd_group_widget->refreshDisplay();
+}
 
-    if(use_compact_layout) {
-        this->resize(this->width(), std::min(sensor_group_widget->getCompactHeight(), max_group_launch_widget_height)
-                                   + std::min(tool_group_widget->getCompactHeight(), max_group_launch_widget_height)
-                                   + label_name_sensor_group->height() * 3
-                                   + roscore_widget->getCompactHeight()
-                                   + 6 * layout->spacing()
-                                   + 2 * layout->margin()
-                                   + main_menu->height());
+void MainWindow::onResizeMainWindow() {
+    if(this->windowState() != Qt::WindowMaximized) {
+        if(use_compact_layout) {
+            this->resize(this->width(), std::min(sensor_group_widget->getCompactHeight(), max_group_launch_widget_height)
+                                       + std::min(tool_group_widget->getCompactHeight(), max_group_launch_widget_height)
+                                       + label_name_sensor_group->height() * 3
+                                       + roscore_widget->getCompactHeight()
+                                       + 6 * layout->spacing()
+                                       + 2 * layout->margin()
+                                       + main_menu->height());
+        }
+        else {
+            this->resize(std::max(sensor_group_widget->getTheoryMinimumWidth(), tool_group_widget->getTheoryMinimumWidth()), this->height());
+        }
     }
-    else {
-        this->resize(std::max(sensor_group_widget->getTheoryMinimumWidth(), tool_group_widget->getTheoryMinimumWidth()), this->height());
-    }
+
+    timer_refresh_cmd_widget->start(10);
 }

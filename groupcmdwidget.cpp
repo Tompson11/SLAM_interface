@@ -35,20 +35,21 @@ GroupCmdWidget::GroupCmdWidget(QWidget *parent) : QWidget(parent)
     button_add_->setBackgroundColor(QtMaterialStyle::instance().themeColor("accent1"));
     button_add_->setText("+");
 
-    QFrame *button_frame = new QFrame(this);
+    button_frame_ = new QFrame(this);
+    button_frame_->setFrameShape(QFrame::NoFrame);
     QGridLayout *button_layout = new QGridLayout();
     button_layout->addWidget(button_add_);
-    button_frame->setLayout(button_layout);
+    button_frame_->setLayout(button_layout);
 
     QListWidgetItem *item = new QListWidgetItem();
-    item->setSizeHint(button_frame->sizeHint());
+    item->setSizeHint(button_frame_->sizeHint());
     list_widget_->addItem(item);
-    list_widget_->setItemWidget(item, button_frame);
+    list_widget_->setItemWidget(item, button_frame_);
     list_widget_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     layout_ = new QGridLayout();
     layout_->addWidget(label_title_back_, 0, 0, 1, 1);
-    layout_->addWidget(label_title_, 0, 0, 1, 1, Qt::AlignCenter);
+    layout_->addWidget(label_title_, 0, 0, 1, 1);
     layout_->addWidget(list_widget_, 0, 1, 1, 1);
     layout_->setSpacing(0);
     layout_->setMargin(0);
@@ -72,6 +73,8 @@ void GroupCmdWidget::toggleCompactLayout() {
 
     if(use_compact_layout_) {
         layout_->addWidget(list_widget_, 1, 0, 1, 1);
+        layout_->setColumnStretch(0, 1);
+        layout_->setColumnStretch(1, 0);
         layout_->setRowStretch(0, 0);
         layout_->setRowStretch(1, 1);
     }
@@ -139,7 +142,6 @@ void GroupCmdWidget::onCmdWidgetChangePosition(CmdWidget* w_from, CmdWidget* w_t
     if(id_from < 0 || id_to < 0)
         return;
 
-    int id_start = id_from;
     while(id_from < id_to) {
         CmdWidget *wid_front = static_cast<CmdWidget *>(list_widget_->itemWidget(list_widget_->item(id_from)));
         CmdWidget *wid_back = static_cast<CmdWidget *>(list_widget_->itemWidget(list_widget_->item(id_from + 1)));
@@ -155,18 +157,22 @@ void GroupCmdWidget::onCmdWidgetChangePosition(CmdWidget* w_from, CmdWidget* w_t
     }
 
     CmdWidget::swapDisplay(w_to, w_from->getWidHoldMyData());
+    refreshDisplay();
+}
 
+void GroupCmdWidget::refreshDisplay() {
     for(int i = 0; i < list_widget_->count() - 1; i++) {
         CmdWidget *cmd_wid = static_cast<CmdWidget *>(list_widget_->itemWidget(list_widget_->item(i)));
         cmd_wid->updateButtonCmdSize();
         m_cmd_to_list_[cmd_wid]->setSizeHint(cmd_wid->sizeHint());
     }
 
+    list_widget_->item(list_widget_->count() - 1)->setSizeHint(QSize(40, 60));
+
     list_widget_->setFrameShape(QFrame::NoFrame);
     list_widget_->setFrameShape(QFrame::Box);
-
-
 }
+
 
 void GroupCmdWidget::saveCurrentConfig(QSettings *settings, const QString &group) {
     if(settings) {
