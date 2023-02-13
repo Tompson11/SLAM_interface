@@ -195,11 +195,11 @@ bool LaunchTableView::isDataValid(const QModelIndex &index, const QVariant &data
         QString key = data.toString().trimmed();
 
         if(key.isEmpty()) {
-            err_msg = "Empty key!";
+            err_msg = "Empty Name!";
             return false;
         }
         else if(isKeyReapted(key)) {
-            err_msg = "Reapted key!";
+            err_msg = "Reapted Name!";
             return false;
         }
         else {

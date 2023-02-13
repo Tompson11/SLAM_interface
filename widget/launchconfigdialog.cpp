@@ -4,6 +4,7 @@
 LaunchConfigDialog::LaunchConfigDialog(QWidget *parent): QDialog(parent)
 {
     message_box = new QMessageBox(this);
+    message_box->setWindowTitle("Incomplete line");
     message_box->setInformativeText("Do you want to delete them?");
     message_box->setStandardButtons(QMessageBox::Yes | QMessageBox::No);
     message_box->setDefaultButton(QMessageBox::No);

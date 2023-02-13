@@ -16,6 +16,7 @@ QWidget* FileDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem 
     }
     else if(index.column() == 1){
         QFileDialog *dialog_dir = new QFileDialog(parent);
+        dialog_dir->setMinimumSize(640, 480);
         dialog_dir->setWindowTitle("Choose Workspace Directory");
         dialog_dir->setFileMode( QFileDialog::DirectoryOnly );
 
@@ -37,6 +38,7 @@ QWidget* FileDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem 
         else
             dialog_file->setDirectory(ori_file.left(ori_file.lastIndexOf("/")));
 
+        dialog_file->setMinimumSize(640, 480);
         dialog_file->setNameFilter("*.launch");
         dialog_file->setWindowTitle("Choose Launch File");
         dialog_file->setFileMode( QFileDialog::ExistingFile );
