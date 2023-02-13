@@ -32,6 +32,7 @@ class RoscoreWidget : public TitleWidget
 public:
     explicit RoscoreWidget(QWidget *parent = nullptr);
     bool getSourceROSCmd(QString &cmd);
+    bool getRosPath(QString &path);
     void saveCurrentConfig(QSettings *settings, const QString &group);
     void loadConfig(QSettings *settings, const QString &group);
     bool isRoscoreOpened();

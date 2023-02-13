@@ -361,6 +361,7 @@ bool RoscoreWidget::getSourceROSCmd(QString &cmd) {
 
     if(is_rospath_changed) {
         is_rospath_valid = validateRosPath(ros_bash_path, true);
+        is_rospath_changed = false;
     }
 
     if(!is_rospath_valid)
@@ -375,18 +376,28 @@ bool RoscoreWidget::getSourceROSCmd(QString &cmd) {
 
 }
 
-void RoscoreWidget::detectRosOpen() {
-       auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
-       process_ros_detect = pool.getOneProcess();
-       connect(process_ros_detect, &QProcess::readyReadStandardOutput,this,&RoscoreWidget::handleROSOpenOutput);
-       connect(process_ros_detect, &QProcess::readyReadStandardError,this,&RoscoreWidget::handleROSOpenError);
+bool RoscoreWidget::getRosPath(QString &path) {
+    QString tmp;
+    if(getSourceROSCmd(tmp) == false) {
+        return false;
+    }
 
+    path = text_rospath->text();
+    return true;
+}
+
+void RoscoreWidget::detectRosOpen() {
        QString cmd;
        if(!getSourceROSCmd(cmd)) {
             if(this->state == WAIT_TO_START_ROSCORE)
                 onRoscoreOpenFail(true, "ROS Install Path Unvalid!");
            return;
        }
+
+       auto &pool = utils::ShellPool<utils::SHELL_BASH>::getInstance();
+       process_ros_detect = pool.getOneProcess();
+       connect(process_ros_detect, &QProcess::readyReadStandardOutput,this,&RoscoreWidget::handleROSOpenOutput);
+       connect(process_ros_detect, &QProcess::readyReadStandardError,this,&RoscoreWidget::handleROSOpenError);
 
        QStringList arguments;
        cmd += "rostopic list";
@@ -406,14 +417,15 @@ void RoscoreWidget::showInfo(const QString &info) {
 bool RoscoreWidget::validateRosPath(const QString &bash_path, bool pop_error) {
     if(bash_path.length() > 0) {
         if(utils::existDir(bash_path)) {
-            return true;
+           return true;
         }
         else {
             if(pop_error)
-                showInfo("PATH Unvalid!");
+                showInfo("PATH Invalid!");
 
             return false;
         }
+
     }
     else {
         return false;

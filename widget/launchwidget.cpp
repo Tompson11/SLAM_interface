@@ -370,7 +370,10 @@ void LaunchWidget::onToggled(bool tog) {
             return;
         }
 
-        QString workspace_bash = workspace + "/devel/setup.bash";
+        QString ros_path;
+        bool ros_path_valid = roscore_widget->getRosPath(ros_path);
+        QString workspace_bash = ros_path_valid && workspace == ros_path ?
+                                 workspace + "/setup.bash" : workspace + "/devel/setup.bash";
         if(!utils::existDir(workspace_bash)) {
             QMessageBox::critical(this, "invalid workspace", workspace + " is not valid, please modify it first!");
             onRoslaunchFail(true, "");

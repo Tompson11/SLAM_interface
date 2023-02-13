@@ -213,7 +213,8 @@ bool LaunchTableView::isDataValid(const QModelIndex &index, const QVariant &data
             return false;
         }
 
-        if(utils::existDir(workspace.toString() + "/devel/setup.bash")) {
+        if(utils::existDir(workspace.toString() + "/devel/setup.bash") ||
+           utils::existDir(workspace.toString() + "/setup.bash") ) {
             QUrl launch_file{model_->data(index.siblingAtColumn(2)).toString()};
             if(!launch_file.isEmpty() && !workspace.isParentOf(launch_file)) {
                 err_msg = "Launch file is not located in the workspace!";
