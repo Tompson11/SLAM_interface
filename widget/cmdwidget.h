@@ -10,8 +10,10 @@
 #include <QLabel>
 #include <QDrag>
 #include <QMimeData>
+#include <QMessageBox>
 
 #include "utils/shellpool.h"
+#include "roscorewidget.h"
 #include "components/qtmaterialraisedbutton.h"
 #include "components/lib/qtmaterialstyle.h"
 #include "components/qtmaterialcheckbox.h"
@@ -28,6 +30,7 @@ public:
     void prepareForChangingPosition();
     void setColor(bool is_clicked);
     void updateButtonCmdSize();
+    void setRoscoreWidget(RoscoreWidget *wid);
 
     CmdWidget *getWidHoldMyData();
 
@@ -44,6 +47,7 @@ protected:
     virtual void dropEvent(QDropEvent *event) override;
 
 private:
+    RoscoreWidget *roscore_widget = nullptr;
 
     QtMaterialRaisedButton *button_cmd_;
     QtMaterialRaisedButton *button_delete_;

@@ -64,6 +64,11 @@ void CmdWidget::updateButtonCmdSize() {
     button_cmd_->setMinimumWidth(button_cmd_->fontMetrics().width(button_cmd_->text()) + 6);
 }
 
+void CmdWidget::setRoscoreWidget(RoscoreWidget *wid) {
+    roscore_widget = wid;
+}
+
+
 void CmdWidget::setCmdName(const QString &name) {
     button_cmd_->setText(name);
     updateButtonCmdSize();
@@ -151,8 +156,11 @@ void CmdWidget::dropEvent(QDropEvent *event) {
 
 void CmdWidget::onButtonCmdClicked() {
     QStringList arguments;
+    QString source_cmd = "";
+    if(roscore_widget != nullptr)
+        roscore_widget->getSourceROSCmd(source_cmd);
     QString cmd = textedit_in_dialog_cmd_->toPlainText();
-    QString total_cmd = QString("gnome-terminal --title '%1' -- bash -c '%2'").arg(button_cmd_->text()).arg(cmd);
+    QString total_cmd = QString("gnome-terminal --title '%1' -- bash -c '%2%3'").arg(button_cmd_->text()).arg(source_cmd).arg(cmd);
     arguments << "-c" << total_cmd;
 
     process_cmd_->setArguments(arguments);

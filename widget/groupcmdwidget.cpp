@@ -85,6 +85,10 @@ void GroupCmdWidget::toggleCompactLayout() {
     }
 }
 
+void GroupCmdWidget::setRoscoreWidget(RoscoreWidget *wid) {
+    roscore_widget_ = wid;
+}
+
 void GroupCmdWidget::addCmdWidget(CmdWidget *new_widget, int row, const QString &cmd_name, const QString &cmd_code) {
     QListWidgetItem *item = new QListWidgetItem();
 
@@ -93,6 +97,7 @@ void GroupCmdWidget::addCmdWidget(CmdWidget *new_widget, int row, const QString 
         new_widget->setCmdName(cmd_name);
         new_widget->setCmdCode(cmd_code);
     }
+    new_widget->setRoscoreWidget(roscore_widget_);
 
     item->setSizeHint(new_widget->sizeHint());
     list_widget_->insertItem(row < 0 ? list_widget_->model()->rowCount() - 1 : row, item);

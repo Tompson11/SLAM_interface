@@ -56,6 +56,7 @@ MainWindow::MainWindow(QWidget *parent)
     sensor_widget_array.resize(5);
 
     cmd_group_widget = new GroupCmdWidget(this);
+    cmd_group_widget->setRoscoreWidget(roscore_widget);
 
     loadConfig(default_setting_name);
 

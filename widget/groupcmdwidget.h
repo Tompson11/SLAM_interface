@@ -25,9 +25,12 @@ public:
     void loadConfig(QSettings *settings, const QString &group);
     void toggleCompactLayout();
     void refreshDisplay();
+    void setRoscoreWidget(RoscoreWidget *wid);
 
 private:
     void addCmdWidget(CmdWidget *new_widget, int row = -1, const QString &cmd_name = "", const QString &cmd_code = "");
+
+    RoscoreWidget *roscore_widget_ = nullptr;
 
     QLabel *label_title_;
     QLabel *label_title_back_;
